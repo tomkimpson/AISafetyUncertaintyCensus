@@ -52,8 +52,8 @@ ID & framework & domain & model & threshold & $n$ & score & uncert. & citation \
   O1 & OpenAI & Cyber CTF & GPT-4o & Low/Med qual. & 172 total (buckets NOT REPORTED) & 19/0/1\% & none & GPT-4o card \\
   O2 & OpenAI & Cyber CTF & o1 (post-mit) & Med qual. & "over 100" (buckets NR) & 46/13/13\% & none & o1 card \S{}5.4 \\
   O3 & OpenAI & Cyber CTF & o3 & High qual. & "over 100" (buckets NR) & 89/68/59\% & none & o3/o4-mini \S{}4.3 \\
-  O4 & OpenAI & Cyber Pattern Labs range & o3 & qual. & 19/13/4 & 16/7/0 & none & o3/o4-mini \S{}4.3 \\
-  O5 & OpenAI & Cyber Pattern Labs range & o4-mini & qual. & 19/13/4 & 14/9/0 & none & o3/o4-mini \S{}4.3 \\
+  O4 & OpenAI & Cyber Pattern Labs range & o3 & qual. & 19/13/4 & 16/7/0 & none & o3/o4-mini \S{}3.9.3 p.11 \\
+  O5 & OpenAI & Cyber Pattern Labs range & o4-mini & qual. & 19/13/4 & 14/9/0 & none & o3/o4-mini \S{}3.9.3 p.11 \\
   O6 & OpenAI & Bio expert comparison & o1 (pre-mit) & Medium & 46 evaluators & 75/69/80\% vs baseline & none & o1 card \S{}5.5.2 p.21 \\
   O7 & OpenAI & Bio multimodal virology & o1 (post-mit) & Medium & 350 questions & 59\% & none & o1 card \S{}5.5.5 \\
   O8 & OpenAI & Bio ProtocolQA & o1 & Medium & 108 Qs; 19 baseliners & +6-8\% over GPT-4o & none & o1 card \S{}5.5.6 \\
@@ -93,7 +93,7 @@ ID & framework & domain & model & threshold & $n$ & score & uncert. & citation \
   O18 & OpenAI & Bio biochemistry reward@4 & GPT-5.5 & 30\% jump between models & NOT REPORTED & 32.32\% (+1.35\%) & none & \S{}9.1.1.5 Table 11 \\
   O19 & OpenAI & Bio hard-neg protein binding pass@4 & GPT-5.5 & 50\% correctness & 43 targets / 492 hotspots & 0.4\% & none & \S{}9.1.1.6 Table 12 \\
   O20 & OpenAI & Bio DNA design pass@1 (win-rate) & GPT-5.5 & 80\% win-rate vs Ledidi & 550 (11 TF $\times$ 50) & 13.82\% & none & \S{}9.1.1.7 Table 13 \\
-  O21 & OpenAI & Cyber CVE-Bench pass@1 & GPT-5.5 & prose High/Critical & 34 of 40 run & (Fig 16) & none & \S{}9.1.2.2 \\
+  O21 & OpenAI & Cyber CVE-Bench pass@1 & GPT-5.5 & prose High/Critical & 34 of 40 run & (Fig 17) & none & \S{}9.1.2.2 \\
   O22 & OpenAI & Cyber professional CTF pass@12 & GPT-5.5 & prose & 16 rollouts & "saturated" & none & \S{}9.1.2.1 \\
   O23 & OpenAI & Cyber UK AISI expert pass@5 & GPT-5.5 & prose High & NOT REPORTED & 90.5\% & $\pm$ 12.9\% & \S{}9.1.2.7 \\
   O24 & OpenAI & Cyber UK AISI expert pass@1 & GPT-5.5 & prose High & NOT REPORTED & 66.7\% & $\pm$ 15.9\% & \S{}9.1.2.7 \\
@@ -114,9 +114,9 @@ ID & framework & domain & model & threshold & $n$ & score & uncert. & citation \
   A34 & Anthropic & CBRN long-form virology t1/t2 & Opus 4.5 & rule-out $<$50\% / rule-in $>$80\% & NOT REPORTED & max@5 0.845 / pass@5 0.912 & none (figure) & 4.5 card \S{}7.2.4.1 p.122 \\
   D14 & DeepMind & Cyber key-skills v1 (hard) & Gemini 3 Pro & alert threshold (prose, no number) & 12 & 11/12 & none & FSF Report p.9 \\
   D15 & DeepMind & Cyber key-skills v2 (end-to-end) & Gemini 3 Pro & prose & 13 & 0/13 & none & FSF Report p.9 \\
-  D16 & DeepMind & Misalignment situational awareness & Gemini 3 Pro & Instr. Reasoning (no accept. criteria) & 11 (50 attempts ea.) & norm. scores, $\approx$Gemini 2.5 w/ few upticks (no pass count) & none (figure) & FSF Report p.16 \\
-  D17 & DeepMind & Misalignment stealth & Gemini 3 Pro & prose (exploratory, no criteria) & 4 (50 attempts ea.) & norm. scores 0--100, $\approx$Gemini 2.5 exc. Oversight Pattern (no pass count) & none (figure) & FSF Report p.17 Fig 5 \\
-  D18 & DeepMind & ML R\&D RE-Bench & Gemini 3 Pro & Accel/Auto L1 (prose) & 7 tasks, 24 runs & human-norm 1.04 & 95\% CI (Fig 4) & FSF Report p.13 \\
+  D16 & DeepMind & Misalignment situational awareness & Gemini 3 Pro & Instr. Reasoning (no accept. criteria) & 11 (50 attempts ea.) & norm. scores, $\approx$Gemini 2.5 w/ few upticks (3/11 in summary table) & none (figure) & FSF Report p.16 \\
+  D17 & DeepMind & Misalignment stealth & Gemini 3 Pro & prose (exploratory, no criteria) & 4 (50 attempts ea.) & norm. scores 0--100, $\approx$Gemini 2.5 exc. Oversight Pattern (1/4 in summary table) & none (figure) & FSF Report p.17 Fig 5 \\
+  D18 & DeepMind & ML R\&D RE-Bench & Gemini 3 Pro & Accel/Auto L1 (prose) & 7 tasks, 24 runs & human-norm 1.04 & 95\% CI (Fig 4) & FSF Report Fig 4 p.15; 1.04 from Gemini 3.1 card \\
   D19 & DeepMind & Harmful manipulation & Gemini 3 Pro & Level 1 (prose, exploratory) & 610 (adv 421 / ctrl 189) & odds ratio (sig.) & "sig." no CI value & FSF Report p.11 \\
   D20 & DeepMind & Harmful manipulation & Gemini 3.1 Pro & prose & NOT REPORTED & odds ratio 3.6$\times$ & none & 3.1 card p.8 \\
   D21 & DeepMind & ML R\&D RE-Bench & Gemini 3.1 Pro & prose & NOT REPORTED & human-norm 1.27 & none & 3.1 card p.8 \\

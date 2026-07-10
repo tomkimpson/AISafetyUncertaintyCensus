@@ -105,8 +105,8 @@ threshold at any ASL level).
 | Cyber CTF | GPT-4o | Low/Med qual. | 172 total (buckets NOT REPORTED) | 19/0/1% | none | Low | GPT-4o card |
 | Cyber CTF | o1 (post-mit) | Med qual. | "over 100" (buckets NR) | 46/13/13% | none | Low | o1 card §5.4 |
 | Cyber CTF | o3 | High qual. | "over 100" (buckets NR) | 89/68/59% | none | below High | o3/o4-mini §4.3 |
-| Cyber Pattern Labs range | o3 | qual. | 19/13/4 | 16/7/0 | none | below High | o3/o4-mini §4.3 |
-| Cyber Pattern Labs range | o4-mini | qual. | 19/13/4 | 14/9/0 | none | below High | o3/o4-mini §4.3 |
+| Cyber Pattern Labs range | o3 | qual. | 19/13/4 | 16/7/0 | none | below High | o3/o4-mini §3.9.3 p.11 |
+| Cyber Pattern Labs range | o4-mini | qual. | 19/13/4 | 14/9/0 | none | below High | o3/o4-mini §3.9.3 p.11 |
 | Bio expert comparison | o1 (pre-mit) | Medium | 46 evaluators | 75/69/80% vs baseline | none | Medium | o1 card §5.5.2 p.21 |
 | Bio multimodal virology | o1 (post-mit) | Medium | 350 questions | 59% | none | Medium | o1 card §5.5.5 |
 | Bio ProtocolQA | o1 | Medium | 108 Qs; 19 baseliners | +6-8% over GPT-4o | none | Medium | o1 card §5.5.6 |
@@ -206,7 +206,7 @@ is a prose "precautionarily High" tier with no decision rule.
 | Bio biochemistry reward@4 | GPT-5.5 | 30% jump between models | NOT REPORTED | 32.32% (+1.35%) | none | below | §9.1.1.5 Table 11 |
 | Bio hard-neg protein binding pass@4 | GPT-5.5 | 50% correctness | 43 targets / 492 hotspots | 0.4% | none | below | §9.1.1.6 Table 12 |
 | Bio DNA design pass@1 (win-rate) | GPT-5.5 | 80% win-rate vs Ledidi | 550 (11 TF × 50) | 13.82% | none | below | §9.1.1.7 Table 13 |
-| Cyber CVE-Bench pass@1 | GPT-5.5 | prose High/Critical | 34 of 40 run | (Fig 16) | none | below Critical | §9.1.2.2 |
+| Cyber CVE-Bench pass@1 | GPT-5.5 | prose High/Critical | 34 of 40 run | (Fig 17) | none | below Critical | §9.1.2.2 |
 | Cyber professional CTF pass@12 | GPT-5.5 | prose | 16 rollouts | "saturated" | none | High | §9.1.2.1 |
 | Cyber UK AISI expert pass@5 | GPT-5.5 | prose High | NOT REPORTED | 90.5% | **± 12.9%** | (margin, prose tier) | §9.1.2.7 |
 | Cyber UK AISI expert pass@1 | GPT-5.5 | prose High | NOT REPORTED | 66.7% | **± 15.9%** | (margin, prose tier) | §9.1.2.7 |
@@ -247,9 +247,9 @@ audit-pinnable despite the published denominators.
 |---|---|---|---|---|---|---|---|
 | Cyber key-skills v1 (hard) | Gemini 3 Pro | alert threshold (prose, no number) | 12 | 11/12 | none | alert met | FSF Report p.9 |
 | Cyber key-skills v2 (end-to-end) | Gemini 3 Pro | prose | 13 | 0/13 | none | below | FSF Report p.9 |
-| Misalignment situational awareness | Gemini 3 Pro | Instr. Reasoning (no accept. criteria) | 11 (50 attempts ea.) | norm. scores, ≈Gemini 2.5 w/ few upticks (no pass count) | none (figure) | below CCL | FSF Report p.16 |
-| Misalignment stealth | Gemini 3 Pro | prose (exploratory, no criteria) | 4 (50 attempts ea.) | norm. scores 0–100, ≈Gemini 2.5 exc. Oversight Pattern (no pass count) | none (figure) | below CCL | FSF Report p.17 Fig 5 |
-| ML R&D RE-Bench | Gemini 3 Pro | Accel/Auto L1 (prose) | 7 tasks, 24 runs | human-norm 1.04 | 95% CI (Fig 4) | below CCL | FSF Report p.13 |
+| Misalignment situational awareness | Gemini 3 Pro | Instr. Reasoning (no accept. criteria) | 11 (50 attempts ea.) | norm. scores, ≈Gemini 2.5 w/ few upticks (3/11 in summary table) | none (figure) | below CCL | FSF Report p.16 |
+| Misalignment stealth | Gemini 3 Pro | prose (exploratory, no criteria) | 4 (50 attempts ea.) | norm. scores 0–100, ≈Gemini 2.5 exc. Oversight Pattern (1/4 in summary table) | none (figure) | below CCL | FSF Report p.17 Fig 5 |
+| ML R&D RE-Bench | Gemini 3 Pro | Accel/Auto L1 (prose) | 7 tasks, 24 runs | human-norm 1.04 | 95% CI (Fig 4) | below CCL | FSF Report Fig 4 p.15; 1.04 from Gemini 3.1 card |
 | Harmful manipulation | Gemini 3 Pro | Level 1 (prose, exploratory) | 610 (adv 421 / ctrl 189) | odds ratio (sig.) | "sig." no CI value | above non-AI baseline | FSF Report p.11 |
 | Harmful manipulation | Gemini 3.1 Pro | prose | NOT REPORTED | odds ratio 3.6× | none | ≈ 3 Pro | 3.1 card p.8 |
 | ML R&D RE-Bench | Gemini 3.1 Pro | prose | NOT REPORTED | human-norm 1.27 | none | below CCL | 3.1 card p.8 |

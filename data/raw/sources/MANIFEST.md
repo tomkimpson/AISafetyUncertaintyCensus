@@ -88,7 +88,7 @@ the manuscript, so they have been dropped from `references.bib` and this manifes
 
 ## Status (2026-07-10)
 
-- **16 / 16 sources resolve.** Every source the census cites now has a live URL; the three
+- **26 / 26 sources resolve.** Every source the census cites now has a live URL; the three
   former placeholders (Opus 4.7, Gemini 3 FSF report, RAND RCT) were located and added, and
   the Gemini 3 Pro / 3.1 Pro model cards were disambiguated.
 - **All PDF sources carry a stable SHA-256** recorded above and machine-checkable via

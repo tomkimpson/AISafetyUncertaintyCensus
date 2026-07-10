@@ -43,7 +43,7 @@ python scripts/verify_sources.py   # stdlib only; needs network
 
 Writes `data/verification/source_provenance.csv`: for every source in
 [`MANIFEST.md`](../data/raw/sources/MANIFEST.md) it records resolve status, SHA-256, and a
-Wayback snapshot. Expect **16/16 resolve**.
+Wayback snapshot. Expect **26/26 resolve**.
 
 - **PDF sources** have a stable SHA-256 — the recorded hash must match on re-download. The
   Opus 4 System Card (the case study's source) matches the hash first recorded on 2026-07-03.
@@ -60,17 +60,21 @@ confirming quote. Regenerate the skeleton (preserving recorded confirmations) wi
 python scripts/seed_cell_audit.py
 ```
 
-Verification tiers (highest audit-impact first):
+Verification status: **all 98 census rows have been checked against their primary sources**
+(86 `confirmed`, 12 `confirmed_note`; no `unverified`, `mismatch`, or `unresolved` rows
+remain). The verification was originally staged by audit impact, and that ordering still
+explains where the strongest evidence lies:
 
-- **Tier 0 — headline (complete).** The nine `evals.csv` rows + the Opus 4 bio-uplift case
-  study, confirmed page-level against the source PDFs. `value_status = confirmed`.
-- **Tier 1 — rest of Anthropic (largely complete).**
-- **Tiers 2–3 — OpenAI / DeepMind / third-party / post-2025 rows:** `value_status =
-  unverified` until fetched and signed off. These do not affect the nine-row headline.
+- **Tier 0 — headline.** The nine `evals.csv` rows + the Opus 4 bio-uplift case study,
+  confirmed page-level against the source PDFs. These carry the paper's central claims.
+- **Tier 1 — rest of Anthropic.** Confirmed page-level.
+- **Tiers 2–3 — OpenAI / DeepMind / third-party / post-2025 rows.** Confirmed against the
+  cited locator in each source; do not affect the nine-row headline.
 
 **Sign-off is complete when** `cell_audit.csv` has no `mismatch` or `unresolved` rows; any
-residual `confirmed_note` (faithful to the cited source but carrying a documented caveat,
-e.g. the 17-vs-18/33 cross-card discrepancy) is an accepted disposition.
+residual `confirmed_note` (faithful to the cited source but carrying a documented caveat —
+e.g. the 17-vs-18/33 cross-card discrepancy, or a value the source states only in a summary
+table) is an accepted disposition. As of the latest pass this criterion is met.
 
 ### 2c. Bibliography (automated)
 

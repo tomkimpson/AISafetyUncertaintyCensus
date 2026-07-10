@@ -69,7 +69,7 @@ Two separate claims, documented in [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBIL
   re-checkable with `python scripts/verify_sources.py`, and every cited value is tracked
   against its primary source in `data/verification/cell_audit.csv`.
 
-As of the latest verification pass: all 16 cited sources resolve; the nine machine-auditable
+As of the latest verification pass: all 26 cited sources resolve; the nine machine-auditable
 rows and the Opus 4 bio-uplift case study are confirmed page-level against the source cards;
 and all 48 bibliography entries resolve and match.
 
