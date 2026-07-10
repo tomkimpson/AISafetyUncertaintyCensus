@@ -50,18 +50,21 @@ S_G55 = "openai-gpt-5-5-system-card-apr-2026"
 S_G56 = "openai-gpt-5-6-preview-system-card-25-jun-2026"
 S_GEM3FSF = "deepmind-gemini-3-pro-fsf-report-nov-2025"
 S_GEM31 = "deepmind-gemini-3-1-pro-model-card-feb-2026"
-S_GPT4O = "openai-gpt-4o-system-card"
-S_O1 = "openai-o1-system-card"
-S_O3 = "openai-o3-o4-mini-system-card"
-S_PHUONG = "phuong-2024-arxiv-2403-13793"
-S_GEM25 = "deepmind-gemini-2-5-report"
-S_ARC = "arc-evals-2023-arxiv-2312-11671"
-S_METRO1 = "metr-o1-preview-report"
-S_METR37 = "metr-claude-3-7-report"
-S_HCAST = "hcast-arxiv-2503-17354"
-S_AISI = "uk-aisi-may-2024"
-S_APOLLO = "apollo-arxiv-2412-04984"
-S_35 = "claude-3-5-sonnet-model-card-addendum"
+# These must match the slugs verify_sources.py writes into source_provenance.csv
+# (slug = lowercased document name, non-alphanumerics -> '-', truncated to 60 chars),
+# so the cell_audit -> provenance join is machine-checkable. Regenerate both together.
+S_GPT4O = "openai-gpt-4o-system-card-arxiv-2410-21276"
+S_O1 = "openai-o1-system-card-dec-2024"
+S_O3 = "openai-o3-o4-mini-system-card-apr-2025"
+S_PHUONG = "phuong-et-al-2024-evaluating-frontier-models-for-dangerous-c"
+S_GEM25 = "google-deepmind-gemini-2-5-report-arxiv-2507-06261"
+S_ARC = "arc-evals-kinniment-et-al-2023-arxiv-2312-11671"
+S_METRO1 = "metr-openai-o1-preview-evaluation"
+S_METR37 = "metr-claude-3-7-sonnet-evaluation"
+S_HCAST = "metr-hcast-arxiv-2503-17354"
+S_AISI = "uk-aisi-advanced-ai-evaluations-may-update-2024"
+S_APOLLO = "apollo-research-in-context-scheming-arxiv-2412-04984"
+S_35 = "claude-3-5-sonnet-model-card-addendum-jun-2024"
 
 # Each entry: fw (required) + any of {domain (startswith), models (exact match on a
 # "/"-split model token), model_sub (substring), cite (substring of citation)}.
