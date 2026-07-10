@@ -1,0 +1,13 @@
+method,alpha,n_cannot_resolve,n_total
+wilson,0.1,4,9
+wilson,0.05,5,9
+wilson,0.01,6,9
+beta,0.1,4,9
+beta,0.05,6,9
+beta,0.01,6,9
+agresti_coull,0.1,4,9
+agresti_coull,0.05,5,9
+agresti_coull,0.01,6,9
+betabinomial,0.1,4,9
+betabinomial,0.05,5,9
+betabinomial,0.01,6,9

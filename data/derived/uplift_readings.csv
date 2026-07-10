@@ -1,0 +1,19 @@
+reading,arm_n,se,implied_participant_sd,method,ratio,low,high,kind,straddles_2.8x,reaches_5x,includes_1x,note
+SD,8,4.5962,13.0,fieller_z,2.52,1.78,4.01,bounded,True,False,False,g=0.130
+SD,8,4.5962,13.0,fieller_t,2.52,1.67,4.54,bounded,True,False,False,df=7
+SD,8,4.5962,13.0,delta_z,2.52,1.71,3.71,bounded,True,False,False,
+SD,8,4.5962,13.0,bootstrap,2.52,1.76,3.86,bounded,True,False,False,
+SD,9,4.3333,13.0,fieller_z,2.52,1.82,3.88,bounded,True,False,False,g=0.115
+SD,9,4.3333,13.0,fieller_t,2.52,1.72,4.27,bounded,True,False,False,df=8
+SD,9,4.3333,13.0,delta_z,2.52,1.75,3.63,bounded,True,False,False,
+SD,9,4.3333,13.0,bootstrap,2.52,1.80,3.79,bounded,True,False,False,
+SD,10,4.111,13.0,fieller_z,2.52,1.84,3.78,bounded,True,False,False,g=0.104
+SD,10,4.111,13.0,fieller_t,2.52,1.77,4.08,bounded,True,False,False,df=9
+SD,10,4.111,13.0,delta_z,2.52,1.78,3.56,bounded,True,False,False,
+SD,10,4.111,13.0,bootstrap,2.52,1.82,3.70,bounded,True,False,False,
+SE,n-free,13.0,39.0,fieller_z,2.52,1.05,+inf,unbounded_above,True,True,False,g=1.039
+SE,n-free,13.0,39.0,delta_z,2.52,0.84,7.54,bounded,True,True,True,
+SE,n-free,13.0,39.0,bootstrap,2.52,1.01,46.04,bounded,True,True,False,
+CI half-width,n-free,6.6327,19.9,fieller_z,2.52,1.56,5.35,bounded,True,True,False,g=0.270
+CI half-width,n-free,6.6327,19.9,delta_z,2.52,1.44,4.41,bounded,True,False,False,
+CI half-width,n-free,6.6327,19.9,bootstrap,2.52,1.52,4.93,bounded,True,False,False,

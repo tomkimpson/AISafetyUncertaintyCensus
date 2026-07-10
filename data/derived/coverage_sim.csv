@@ -1,0 +1,20 @@
+kind,reading,n,participant_sd,dgp,crit,truth_ratio,delta_coverage,fieller_coverage,delta_below_frac,fieller_below_frac,unbounded_fieller_frac,feasible
+coverage,SD,8,13.0,beta,t,2.52,0.9586,0.9511,0.018,0.0111,0.0001,True
+coverage,SD,8,13.0,beta,z,2.52,0.917,0.9127,0.0379,0.0259,0.0,True
+coverage,SD,8,13.0,two_point,t,2.52,0.8944,0.8427,0.1056,0.042,0.1183,True
+coverage,SD,9,13.0,beta,t,2.52,0.9572,0.9497,0.0191,0.0129,0.0,True
+coverage,SD,9,13.0,beta,z,2.52,0.9223,0.9163,0.0354,0.0255,0.0,True
+coverage,SD,9,13.0,two_point,t,2.52,0.8843,0.8821,0.1157,0.036,0.0833,True
+coverage,SD,10,13.0,beta,t,2.52,0.955,0.9483,0.0199,0.0129,0.0,True
+coverage,SD,10,13.0,beta,z,2.52,0.9243,0.9185,0.0335,0.0242,0.0,True
+coverage,SD,10,13.0,two_point,t,2.52,0.9077,0.9012,0.0922,0.0332,0.0607,True
+coverage,SE,9,39.0,beta,t,2.52,0.9326,0.9187,0.0176,0.0058,0.766,True
+coverage,SE,9,39.0,beta,z,2.52,0.905,0.8947,0.0365,0.0155,0.5672,True
+coverage,SE,9,39.0,two_point,t,2.52,0.9807,0.9833,0.0193,0.0077,0.7357,True
+coverage,CI half-width,9,19.9,beta,t,2.52,0.9552,0.945,0.0196,0.0095,0.0118,True
+coverage,CI half-width,9,19.9,beta,z,2.52,0.9228,0.911,0.0353,0.0212,0.0015,True
+coverage,CI half-width,9,19.9,two_point,t,2.52,0.975,0.9648,0.025,0.025,0.0846,True
+threshold_oc,SD,9,13.0,beta,t,2.8,0.9502,0.9389,0.02,0.0069,0.0246,True
+threshold_oc,SD,9,13.0,two_point,t,2.8,0.9509,0.9304,0.0491,0.0495,0.1352,True
+threshold_oc,SD,9,13.0,beta,t,5.0,0.9453,0.9261,0.0201,0.0072,0.0226,True
+threshold_oc,SD,9,13.0,two_point,t,5.0,0.9509,0.9209,0.0491,0.0491,0.1352,True

@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "evalaudit"
+version = "0.1.0"
+description = "Statistical resolving power of dangerous-capability evals against governance thresholds"
+requires-python = ">=3.10"
+dependencies = ["numpy", "scipy", "statsmodels"]
+
+[project.optional-dependencies]
+dev = ["pytest", "matplotlib"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

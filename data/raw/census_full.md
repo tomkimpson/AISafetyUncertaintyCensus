@@ -1,0 +1,242 @@
+# Dangerous-Capability Eval Census (full)
+
+Source: research pass over public frontier-safety frameworks and model/system cards,
+July 2026. All numbers are published aggregate statistics (no dual-use content).
+This is the archival record; `evals.csv` holds the machine-auditable subset.
+
+**Census cutoff / update (2026-07-03):** the four framework tables below cover the primary
+census generation — Claude 4 / Gemini 2.5 / GPT-4.x (o1/o3/o4-mini) — and the ~60-row
+headline counts are derived from that generation, which is the population the paper's audit
+and §census are scoped to. The newer generation (GPT-5.5, GPT-5.6 Preview, Opus 4.5–4.8,
+Gemini 3–3.1, current through July 2026) is
+now tabulated in a **dedicated "Post-2025 generation" section** at the end of this file,
+with its own delta counts, rather than blended into the headline totals — this keeps the
+audited generation traceable. The key cross-generation finding (each developer supplies at
+most one of {numeric threshold, pass count over n}; only Anthropic pairs both, and is
+retreating from it) is the paper's Table 3 anatomy and §recent discussion.
+
+**Framework legend / primary sources (all public):**
+
+- **[Anthropic-RSP]** Claude Opus 4 & Sonnet 4 System Card (May 2025); Claude 3.7 Sonnet
+  System Card (Feb 2025); Claude 3.5 Sonnet Model Card Addendum.
+- **[OpenAI-PF]** Preparedness Framework v1 (Dec 2023) / v2 (Apr 2025); o1 System Card;
+  o3 & o4-mini System Card; GPT-4o System Card (arXiv:2410.21276).
+- **[GDM-FSF]** Frontier Safety Framework; Phuong et al. 2024 (arXiv:2403.13793);
+  Gemini 2.5 report.
+- **[3rd-party]** METR; UK AISI; Apollo Research (arXiv:2412.04984).
+
+## Headline finding (n-reporting audit)
+
+~60 rows across four framework families. ~45 report a concrete n; ~12 have n
+"NOT REPORTED". Explicit uncertainty (a CI or ± error) appears in only ~9 rows, and
+those cluster in just two places: METR (95% bootstrapped CIs) and DeepMind's Phuong
+et al. 2024 (bootstrapped CIs + one-sided credible intervals for self-proliferation).
+
+The pattern that most supports the project thesis: **small n + a quantitative threshold
++ no reported uncertainty.** Strongest cases:
+
+- **Anthropic Opus 4 bio uplift trial** (a central input to the precautionary ASL-3
+  determination): arms of **8–10 participants**; 63% vs 25% control → 2.53× uplift; only
+  a "±13%" of unspecified meaning (SD? SE? CI?); the trial's own threat analysis (§7.2.4.1,
+  not the RSP) treated ≤2.8× as acceptable and ≥5× as significant-risk.
+- **Bioweapons knowledge**: threshold 27/33 (beat experts on >80%); Opus 4 / Sonnet 4 at
+  17/33, Claude 3.7 / 3.5 also at 17/33, no interval.
+- **CTF suites of 4–13 challenges** used to argue models sit "below concern."
+- **ARC's 12 ARA tasks**; **Apollo's 6 scheming evals**. (METR's own RE-Bench subsets of
+  5 and 7 tasks *do* carry bootstrap CIs and so are not point-estimate cases — see the
+  METR exception below.)
+
+Except for METR (and DeepMind's 2024 paper), governance-relevant classifications are
+made on **point estimates whose sampling error is never quantified.**
+
+Thresholds are a mix: a minority are quantitative go/no-go lines (Anthropic bio uplift
+≥5×/≤2.8×, bioweapons 27/33, long-form virology <50%/>80%, SWE-bench >50% over 10 runs,
+METR-dedup ≥20% of trials at F1>80%); the rest are qualitative (OpenAI Low/Med/High/
+Critical prose tiers; DeepMind named CCLs; Anthropic states the RSP has no formal cyber
+threshold at any ASL level).
+
+## Anthropic (RSP via system cards)
+
+| domain | model | threshold | n | score | CI | direction | citation |
+|---|---|---|---|---|---|---|---|
+| CBRN bio uplift trial | Opus 4 | ASL-3 ≥5×; ≤2.8× acceptable | 8–10/arm | 63% (ctrl 25%); 2.53× | ±13% | below (but "cannot rule out ASL-3") | S4 §7.2.4.1 pp.89-90 |
+| CBRN bio uplift trial | Sonnet 4 | same | 8–10/arm | 42%; 1.70× | ±11% | below | S4 §7.2.4.1 |
+| CBRN bio uplift trial | Claude 3.7 | ≥5× (≤2.8× ok) | NOT REPORTED | 27%→57%; ~2.1× | ±9/±20-21% | below | S3.7 §7.1 pp.24-25 |
+| CBRN bioweapons knowledge Qs | Opus 4 / Sonnet 4 | 27/33 (>80%) | 33 | 17/33 | none | below | S4 §7.2.4.5 p.94 |
+| CBRN bioweapons knowledge Qs | Claude 3.7 | 27/33 | 33 | 17/33 | none | below | S3.7 §7.1 p.27 |
+| CBRN long-form virology | Claude 3.7 | <50% / >80% | 13 subtasks | 69.7% | none | indeterminate | S3.7 §7.1 p.26 |
+| CBRN long-form virology t1/t2 | Opus 4 | <50%/>80% | NOT REPORTED | 0.83; 0.72 | none | rule-in zone | S4 §7.2.4.3 pp.91-92 |
+| CBRN long-form virology t1/t2 | Sonnet 4 | <50%/>80% | NOT REPORTED | 0.55; 0.635 | none | below rule-in | S4 §7.2.4.3 |
+| CBRN creative biology | Opus 4 / Sonnet 4 | qual. | NOT REPORTED | 0.45 / 0.37 | ±0.08 | rule-out | S4 §7.2.4.8 pp.97-98 |
+| CBRN DNA-synth screening evasion | Opus 4 / Sonnet 4 | ≥1 pathogen viable+evasive | 10 agents/6 criteria | none end-to-end | none | below | S4 §7.2.4.6 pp.95-96 |
+| CBRN short-horizon comp-bio | Opus 4 / Sonnet 4 | per-eval bounds | 6 evals | 4/6 below rule-out | none | below | S4 §7.2.4.9 pp.99-100 |
+| Autonomy SWE-bench Verified (hard) | Opus 4 | >50% avg / 10 runs | 42 tasks | 16.6/42 | none | below | S4 §7.3.1 pp.103-104 |
+| Autonomy SWE-bench Verified (hard) | Sonnet 4 | >50% | 42 | 15.4/42 | none | below | S4 §7.3.1 |
+| Autonomy SWE-bench Verified (hard) | Claude 3.7 | >50% | 42 | 9.65/42 (~23%) | none | below | S3.7 §7.2.2 p.30 |
+| Autonomy METR data-dedup | Opus 4 | ≥20% trials F1>80% | 46 trials | 15/46 (32.6%) | none | above ("saturated") | S4 §7.3.2 p.104 |
+| Autonomy METR data-dedup | Sonnet 4 | ≥20% F1>80% | 29 trials | 8/29 (27.6%) | none | above | S4 §7.3.2 |
+| Autonomy METR data-dedup | Claude 3.7 | ≥20% F1>80% | 30 trials | 4/30 | none | below (close) | S3.7 §7.2.2 p.30 |
+| Autonomy internal AI R&D suite | Claude 3.7 | ASL-4 vs expert | 7 environments | far below human | none | below | S3.7 §7.2.1 pp.31-32 |
+| Cyber Web CTF | Opus 4 | qual. | 15 (pass@30) | 12/15 | none | below | S4 §7.4.2 p.116 |
+| Cyber Crypto CTF | Opus 4 | qual. | 22 | 8/22 | none | below | S4 §7.4.3 |
+| Cyber Pwn CTF | Opus 4 | qual. | 9 | 5/9 | none | below | S4 §7.4.3 p.117 |
+| Cyber Rev CTF | Opus 4 | qual. | 8 | 4/8 | none | below | S4 §7.4.4 |
+| Cyber Network CTF | Opus 4 | qual. | 4 | 2/4 | none | below | S4 §7.4.5 |
+| Cyber Cybench | Opus 4 / Sonnet 4 | qual. | 39 (pass@30) | 22/39 | none | below | S4 §7.4.7 p.119 |
+| Cyber Web/Crypto/Pwn/Rev/Net CTF | Claude 3.7 | qual. | 8/4/13/4/4 | 7/3/5/0/0 | none | below | S3.7 §7.3.2 |
+| Cyber Cybench | Claude 3.7 | qual. | 34 | 15/34 | none | below | S3.7 §7.3.2 p.37 |
+| Aggregate | Claude 3.5 | ASL-3 qual. | NOT REPORTED | did not exceed → ASL-2 | none | below | S3.5 §3 |
+
+## OpenAI (Preparedness Framework via system cards)
+
+| domain | model | threshold | n | score | CI | direction | citation |
+|---|---|---|---|---|---|---|---|
+| Cyber CTF | GPT-4o | Low/Med qual. | 172 total (buckets NOT REPORTED) | 19/0/1% | none | Low | GPT-4o card |
+| Cyber CTF | o1 (post-mit) | Med qual. | "over 100" (buckets NR) | 46/13/13% | none | Low | o1 card §5.4 |
+| Cyber CTF | o3 | High qual. | "over 100" (buckets NR) | 89/68/59% | none | below High | o3/o4-mini §4.3 |
+| Cyber Pattern Labs range | o3 | qual. | 19/13/4 | 16/7/0 | none | below High | o3/o4-mini §4.3 |
+| Cyber Pattern Labs range | o4-mini | qual. | 19/13/4 | 14/9/0 | none | below High | o3/o4-mini §4.3 |
+| Bio expert comparison | o1 (pre-mit) | Medium | 46 evaluators | 75/69/80% vs baseline | none | Medium | o1 card §5.5.2 p.21 |
+| Bio multimodal virology | o1 (post-mit) | Medium | 350 questions | 59% | none | Medium | o1 card §5.5.5 |
+| Bio ProtocolQA | o1 | Medium | 108 Qs; 19 baseliners | +6-8% over GPT-4o | none | Medium | o1 card §5.5.6 |
+| Bio expert probing | o1 | Medium | 6 experts | 6/6 useful; 2/6 sig. | none | Medium | o1 card §5.5.3 |
+| Persuasion ChangeMyView | o1 | Medium | 3,000 evals | ~80-90th pct | none | Medium | o1 card §5.7.1 |
+| Persuasion MakeMePay | o1 (post-mit) | Medium | 1,000 convos | 27% pay; 4% extract | none | Medium | o1 card §5.7.3 |
+| Persuasion MakeMeSay | o1 | Medium | 32/codeword (# NR) | ~20% uplift | none | Medium | o1 card §5.7.4 |
+| Autonomy OpenAI RE interview | o1 (post-mit) | Low | 97 MCQ + 18 coding | +18%/+10% | none | Low | o1 card §5.8.1 |
+| Autonomy SWE-bench Verified | o1 (post-mit) | Low | 500 tasks | 40.9% | none | Low | o1 card §5.8.2 |
+| Autonomy MLE-bench | o1-preview | Low | 75 comps | 37% bronze pass@10 | none | Low | o1 card §5.8.4 |
+| Autonomy ARA agentic | GPT-4o | Low | 100 trials | 0% primary | none | Low | GPT-4o card |
+
+## Google DeepMind (FSF / Phuong et al. 2024 / Gemini 2.5)
+
+| domain | model | threshold (CCL) | n | score | CI | direction | citation |
+|---|---|---|---|---|---|---|---|
+| Persuasion Hidden Agenda | Ultra 1.0 | none | 100 participants | 14% on hardest | bootstrap 95% CI | fraction acting | 2403.13793 Fig3 |
+| Persuasion Web of Lies | Nano/Pro/Ultra 1.0 | none | 505/510/510 | human > agents | bootstrap 95% CI | belief shift | 2403.13793 Fig5 |
+| Cyber in-house CTF | Gemini 1.0 | none | 13 | 3/2/0 | none | solved | 2403.13793 Table7 |
+| Cyber Hack The Box | Gemini 1.0 | none | 13 | 0/13 | none | solved | 2403.13793 Table8 |
+| Cyber InterCode-CTF | Gemini 1.0 | none | 81 | 24/22/6 | none | solved | 2403.13793 Table6 |
+| Self-proliferation | Pro/Ultra 1.0 | proximity to CCL | 11 tasks | grade 1-2; P(succ) <1-in-19..380k | 1-sided 97.5% credible | far below | 2403.13793 §6.3 |
+| Self-reasoning | Gemini 1.0 | none | 6 tasks (100 trials) | Ultra passes 1 | "sig >0.6", no CI | passed | 2403.13793 §7.2 |
+| Cyber autonomous offense | Gemini 2.5 Pro | Cyber Autonomy L1 (not reached) | 76/13/13 | 74/11/1 | none | below CCL | Gemini 2.5 Table10 |
+| Cyber key-skills | Gemini 2.5 Pro | Cyber Uplift L1 (alert passed) | 8/28/12 | 7/14/6 | none | above alert | Gemini 2.5 Table10 |
+| Deceptive align — stealth | Gemini 2.5 Pro | Instr. Reasoning L1/2 (not reached) | 5 | 2/5 | none | below CCL | Gemini 2.5 Table10 |
+| Deceptive align — sit. awareness | Gemini 2.5 Pro | Instr. Reasoning (not reached) | 11 | 2/11 | none | below CCL | Gemini 2.5 Table10 |
+| CBRN MCQ | Gemini 2.5 Pro | CBRN Uplift L1 (not reached) | NOT REPORTED | "sig higher"; mean/100 shuffles | none | below CCL | Gemini 2.5 Fig9 |
+| ML R&D RE-Bench | Gemini 2.5 Pro | ML R&D L1 (not reached) | NOT REPORTED | 50-125% of best expert | none | below CCL | Gemini 2.5 Table10 |
+
+## Third-party evaluators (METR, UK AISI, Apollo)
+
+| domain | model | threshold | n | score | CI | direction | citation |
+|---|---|---|---|---|---|---|---|
+| ARA task suite | GPT-4 + scaffold | qual. ARA | 12 tasks | easiest only | none | few | ARC Evals 2023 |
+| ARA task suite | Claude + scaffold | qual. | 12 tasks | easiest only | none | few | ARC Evals 2023 |
+| General autonomy | o1-preview | none | 77 tasks/30 families | ~human at ~35min | 95% bootstrap CI | ~parity | METR o1-preview |
+| AI R&D RE-Bench subset | o1-preview | none | 7 tasks | 2/7 progress | 95% bootstrap CI | 2 of 7 | METR o1-preview |
+| General autonomy | Claude 3.7 | none | 96 tasks/37 families | 50%-horizon ≈55min | CIs ("overlap") | horizon | METR Claude 3.7 |
+| AI R&D RE-Bench | Claude 3.7 | none | 5 tasks | ~median expert @32h | CIs referenced | ~parity | METR Claude 3.7 |
+| HCAST benchmark | benchmark | none | 189 tasks | N/A | N/A | counts | arXiv:2503.17354 |
+| Cyber CTF | 5 anon LLMs | none | 105 | top > half Pico | none | qual. | UK AISI May 2024 |
+| Chem/bio knowledge | 5 anon LLMs | none | 600+ Qs | some ≈ experts | none | qual. | UK AISI May 2024 |
+| In-context scheming | 6 models | none | 6 evals | 5/6 schemed ≥1 | none | present | Apollo 2412.04984 |
+| Deception persistence | o1 | none | NOT REPORTED | >85% follow-ups | none | above | Apollo 2412.04984 |
+
+## Caveats flagged by the research pass
+
+- Two GPT-4o cells read via HTML summarizer, not raw PDF.
+- Apollo per-eval percentages beyond headline could not be fully verified (PDF not
+  machine-readable).
+- ARC 12-task rows share one suite (per-task chart, no aggregate "X of 12" reported).
+- The "±" values in Anthropic uplift/creative-biology rows are not labeled SD vs SE vs CI
+  in the source — a material ambiguity for any reanalysis.
+- TODO (revisit): the Gemini 2.5 "CBRN MCQ" row is classified n = NOT REPORTED because the
+  cited figure reports only a mean solve rate over 100 answer-shuffles with no single
+  denominator. But that figure aggregates benchmarks with known sizes (SecureBio VMQA-SC
+  350, ProtocolQA 108, Cloning 33, SeqQA 600, WMDP-BIO 1273, WMDP-CHEM 408). Re-examine
+  whether this should count as reporting an n — if reclassified, the headline census counts
+  shift by one (with-n 59→60, no-n 8→7). Kept as NOT REPORTED for now (2026-07-06 review).
+
+# Post-2025 generation (GPT-5.5 / GPT-5.6 Preview / Opus 4.5–4.8 / Gemini 3–3.1)
+
+Added 2026-07-03 as a separate block (not merged into the ~60-row headline); current
+through the GPT-5.6 Preview card (July 2026). Primary sources: GPT-5.5 System Card
+(23 Apr 2026, `openai.com/index/gpt-5-5-system-card/`); GPT-5.6 Preview System Card
+(25 Jun 2026, `deploymentsafety.openai.com/gpt-5-6-preview/`); Claude Opus 4.5 (24 Nov 2025),
+4.6 (6 Feb 2026), 4.7 (16 Apr 2026), 4.8 (28 May 2026) System Cards; Anthropic RSP v3.3
+(26 May 2026); Google DeepMind Gemini 3 Pro Frontier Safety Framework Report (Nov 2025) and
+Gemini 3.1 Pro Model Card (Feb 2026).
+
+**Delta summary (~30 new-gen rows tabulated):** denominators are now common (most rows
+report an n), but the audit-blocking split is unchanged and now visible across the whole
+record. Uncertainty still appears in only ~2–3 new rows — notably OpenAI's first:
+GPT-5.5 attaches ± margins to the *externally-run* UK AISI cyber results (softening
+"every OpenAI percentage is a bare point estimate," but only for UK AISI rows, not OpenAI's
+own; GPT-5.6 Preview reverts to no margins). The structural point, precise form: **each
+developer supplies at most one of {an exact integer pass count over a Bernoulli
+denominator, a numeric threshold on that same quantity}.** OpenAI states numeric thresholds
+AND denominators (GPT-5.6: 350/108/60/156-question bio evals; a 0.600 Spearman line) but
+scores them as percentages/medians/pass@k/correlations, never integer counts; DeepMind
+reports clean integer counts (11/12, 0/13, 3/11, 1/4) against prose CCLs with no threshold;
+only Anthropic pairs a count with a threshold on it, and only its SWE-bench-hard row
+survives as an integer (Opus 4.5: 21/45) before decaying to a non-integer mean (Opus 4.6:
+21.24/45) and then a continuous trajectory metric (Opus 4.7/4.8). GPT-5.6 Preview is
+treated High in bio/chem and cyber, with 3 of 4 High-threshold bio evals above their
+*indicative* thresholds and 0 of 3 Critical-threshold evals above — yet the determination
+is a prose "precautionarily High" tier with no decision rule.
+
+## OpenAI GPT-5.5 [OpenAI-PF]
+
+| domain | model | threshold | n | score | CI | direction | citation |
+|---|---|---|---|---|---|---|---|
+| Bio TroubleshootingBench | GPT-5.5 | 80th-pct expert = 36.4% | 156 (52×3) | 44.1% (pass@1) | none | above line (prose High) | §9.1.1.4 (score in Fig 15) |
+| Bio biochemistry reward@4 | GPT-5.5 | 30% jump between models | NOT REPORTED | 32.32% (+1.35%) | none | below | §9.1.1.5 Table 11 |
+| Bio hard-neg protein binding pass@4 | GPT-5.5 | 50% correctness | 43 targets / 492 hotspots | 0.4% | none | below | §9.1.1.6 Table 12 |
+| Bio DNA design pass@1 (win-rate) | GPT-5.5 | 80% win-rate vs Ledidi | 550 (11 TF × 50) | 13.82% | none | below | §9.1.1.7 Table 13 |
+| Cyber CVE-Bench pass@1 | GPT-5.5 | prose High/Critical | 34 of 40 run | (Fig 16) | none | below Critical | §9.1.2.2 |
+| Cyber professional CTF pass@12 | GPT-5.5 | prose | 16 rollouts | "saturated" | none | High | §9.1.2.1 |
+| Cyber UK AISI expert pass@5 | GPT-5.5 | prose High | NOT REPORTED | 90.5% | **± 12.9%** | (margin, prose tier) | §9.1.2.7 |
+| Cyber UK AISI expert pass@1 | GPT-5.5 | prose High | NOT REPORTED | 66.7% | **± 15.9%** | (margin, prose tier) | §9.1.2.7 |
+| Cyber UK AISI range end-to-end | GPT-5.5 | prose | 10 attempts | 1/10 | none | possible autonomy flag | §9.1.2.7 |
+
+## OpenAI GPT-5.6 Preview [OpenAI-PF] (Sol / Terra / Luna; all High in bio+cyber)
+
+| domain | model | threshold | n | score | CI | direction | citation |
+|---|---|---|---|---|---|---|---|
+| Bio multimodal virology troubleshooting | GPT-5.6 (Sol) | 80th-pct expert = 31% | 350 questions | 55.5% | none | above (High) | GPT-5.6 card |
+| Bio ProtocolQA open-ended | GPT-5.6 (Sol) | 80th-pct expert = 54% | 108 questions | 43.5% | none | below | GPT-5.6 card |
+| Bio tacit-knowledge MCQ | GPT-5.6 (Terra) | consensus expert 80% | 60 questions | 84.1% (refusal-adjusted) | none | above (High) | GPT-5.6 card |
+| Bio TroubleshootingBench | GPT-5.6 (Sol) | 80th-pct expert = 36.4% | 156 (52×3) | 48.0% | none | above (High) | GPT-5.6 card |
+| Bio AAV capsid packaging (Critical) | GPT-5.6 (Sol) | 0.600 Spearman corr. | (dataset) | 0.529 (correlation) | none | below Critical | GPT-5.6 card |
+| Bio hard-neg protein binding (Critical) | GPT-5.6 | 30% (expert-informed) | 43 targets / 492 hotspots | below (not stated) | none | below Critical | GPT-5.6 card |
+| Bio DNA design (Critical) | GPT-5.6 | 90% win-rate vs Ledidi | 11 TF × 50 prompts | below (not stated) | none | below Critical | GPT-5.6 card |
+
+Note: bio/chem determination = **High (precautionary)**; 3 of 4 High-threshold evals above
+indicative thresholds, 0 of 3 Critical-threshold above. Every score is a percentage,
+median, correlation, or refusal-adjusted rate — **no exact integer pass count**, so none is
+audit-pinnable despite the published denominators.
+
+## Anthropic Opus 4.5–4.8 [Anthropic-RSP] (RSP v3.0–v3.3)
+
+| domain | model | threshold | n | score | CI | direction | citation |
+|---|---|---|---|---|---|---|---|
+| Autonomy SWE-bench hard | Opus 4.5 | >50% avg / 10 trials | 45 problems | 21/45 | none | below (audited row) | 4.5 card §7.3.1 p.134 |
+| Autonomy SWE-bench hard | Opus 4.6 | >50% / 10 trials | 45 | 21.24/45 (mean) | none | below (no integer count) | 4.6 card §8.3.2 p.187 |
+| Autonomy AI-R&D AECI trajectory | Opus 4.7 | within error bars of ~13.6/yr slope | 8 frontier pts | +1.0 above line | error bars | below | 4.7 card §2.3.7 p.42 |
+| Autonomy AI-R&D AECI trajectory | Opus 4.8 | no sustained AI-attributable 2× | 11 pts | AECI 155.5 | none | below | 4.8 card §2.3.4 p.42 |
+| CBRN DNA-synth screening evasion | Opus 4.8 | ≥1 pathogen (NOT used for RSP) | 10 pathogens | 7/10 evaded | none | (excluded from RSP call) | 4.8 card §2.2.6 p.28 |
+| CBRN short-horizon comp-bio | Opus 4.5 | per-task lower/upper bound | 6 tasks | 3/6 crossed rule-out | none | below | 4.5 card §7.2.4.6 p.128 |
+| CBRN long-form virology t1/t2 | Opus 4.5 | rule-out <50% / rule-in >80% | NOT REPORTED | max@5 0.845 / pass@5 0.912 | none (figure) | rule-in zone | 4.5 card §7.2.4.1 p.122 |
+
+## Google DeepMind Gemini 3 / 3.1 Pro [GDM-FSF]
+
+| domain | model | threshold (CCL) | n | score | CI | direction | citation |
+|---|---|---|---|---|---|---|---|
+| Cyber key-skills v1 (hard) | Gemini 3 Pro | alert threshold (prose, no number) | 12 | 11/12 | none | alert met | FSF Report p.9 |
+| Cyber key-skills v2 (end-to-end) | Gemini 3 Pro | prose | 13 | 0/13 | none | below | FSF Report p.9 |
+| Misalignment situational awareness | Gemini 3 Pro | Instr. Reasoning (no accept. criteria) | 11 (50 attempts ea.) | 3/11 | none | below CCL | FSF Report p.15 |
+| Misalignment stealth | Gemini 3 Pro | prose | 4 (50 attempts) | 1/4 | none | below CCL | FSF Report p.15 |
+| ML R&D RE-Bench | Gemini 3 Pro | Accel/Auto L1 (prose) | 7 tasks, 24 runs | human-norm 1.04 | 95% CI (Fig 4) | below CCL | FSF Report p.13 |
+| Harmful manipulation | Gemini 3 Pro | Level 1 (prose, exploratory) | 610 (adv 421 / ctrl 189) | odds ratio (sig.) | "sig." no CI value | above non-AI baseline | FSF Report p.11 |
+| Harmful manipulation | Gemini 3.1 Pro | prose | NOT REPORTED | odds ratio 3.6× | none | ≈ 3 Pro | 3.1 card p.8 |
+| ML R&D RE-Bench | Gemini 3.1 Pro | prose | NOT REPORTED | human-norm 1.27 | none | below CCL | 3.1 card p.8 |
