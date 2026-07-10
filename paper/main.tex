@@ -375,7 +375,7 @@ with the published facts held in a single data file and all modelling assumption
 sensitivity sweep is generated as a by-product of the main audit. The code and data that
 reproduce every number, table, and figure in this paper are available at
 \url{https://github.com/tomkimpson/AISafetyUncertaintyCensus}.
-\textbf{Statement on AI usage:} Claude code Opus 4.8 was used to compile the census. The audtable rows were all checked manually and found to agree. A random sample ~20\% of the remaning census was checked manually and all found to be copliant. The remaining X \% is obtained automatically from an AI agent
+\textbf{Statement on AI usage:} The census in Section~\ref{sec:census} and Appendix~A was not compiled manually: an AI agent (Claude Code, running Claude Opus 4.8) located the source documents and extracted the reported evaluation results into the machine-readable census. All nine machine-auditable rows used in the statistical audit of Section~\ref{sec:audit} were then verified manually against the primary sources and found to agree. Of the remaining census rows, a random sample of roughly 20\% was verified manually, with no discrepancies found; the remaining $\sim$80\% are reported as extracted by the agent and have not been individually checked, and carry the corresponding risk of extraction error. All statistical analysis is implemented in the accompanying code repository and is independent of the agent.
 
 \section*{Competing interests}
 The authors have no lab affiliation and no financial or advisory relationship with any
