@@ -77,13 +77,14 @@ Back the METR / UK AISI / Apollo / ARC / HCAST rows of the census.
 | UK AISI — Advanced AI evaluations, May update (2024) | https://www.aisi.gov.uk/blog/advanced-ai-evaluations-may-update | 2026-07-10 | HTML; use Wayback |
 | Apollo Research — in-context scheming (arXiv:2412.04984) | https://arxiv.org/pdf/2412.04984 | 2026-07-10 | (PDF) |
 
-## Downstream-use receipts (§3)
+## Downstream-use receipt
 
 | document | url | retrieved | archival anchor |
 |---|---|---|---|
 | Epoch AI — biorisk evaluations (Ho & Berg, Jun 2025) | https://epoch.ai/gradient-updates/do-the-biorisk-evaluations-of-ai-labs-actually-measure-the-risk-of-developing-bioweapons | 2026-07-03 | HTML; Wayback available |
-| TIME — Claude 4 safeguards (Perrigo, May 2025) | https://time.com/7287806/anthropic-claude-4-opus-safety-bio-risk/ | 2026-07-10 | HTML; Wayback available (now fetchable with a browser UA — the earlier "403 to bot" note is resolved) |
-| CNBC — Claude 4 security measures (May 2025) | https://www.cnbc.com/2025/05/23/anthropic-claude-4-weapons.html | 2026-07-03 | HTML; Wayback available |
+
+(The TIME and CNBC press pieces were previously listed here but are not cited in
+the manuscript, so they have been dropped from `references.bib` and this manifest.)
 
 ## Status (2026-07-10)
 
