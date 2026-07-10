@@ -7,10 +7,20 @@ name = "evalaudit"
 version = "0.1.0"
 description = "Statistical resolving power of dangerous-capability evals against governance thresholds"
 requires-python = ">=3.10"
-dependencies = ["numpy", "scipy", "statsmodels"]
+# Bounded ranges: lower bounds are the oldest releases the code is known to work
+# with; upper bounds guard against the next major that could change numerics.
+# Exact versions are pinned in uv.lock for byte-level reproducibility.
+dependencies = [
+    "numpy>=1.26,<3",
+    "scipy>=1.11,<2",
+    "statsmodels>=0.14,<0.15",
+]
 
 [project.optional-dependencies]
-dev = ["pytest", "matplotlib"]
+dev = [
+    "pytest>=7,<9",
+    "matplotlib>=3.7,<4",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]

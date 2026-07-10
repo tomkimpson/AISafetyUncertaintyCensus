@@ -24,3 +24,5 @@ dist/
 *.synctex.gz
 *.toc
 paper/main.pdf
+
+data/verification/cache/
