@@ -369,13 +369,14 @@ comparisons state a hypothesis-testing claim the sample sizes cannot support, wh
 only defensible reading of the same decisions is precautionary. The fix is to follow the example set by scientific metrology and report the sample size, label the uncertainty, and tie the interval to a stated decision rule. It would cost little, and it would deny claims the evidence does not license.
 
 \section*{Data and code availability}
-All computation is implemented in a small package, \texttt{evalaudit} (30 unit tests),
+All computation is implemented in a small package, \texttt{evalaudit} (39 unit tests),
 with the published facts held in a single data file and all modelling assumptions
 (cluster sizes, priors) held separately in the analysis scripts. The full ICC$\times m$
 sensitivity sweep is generated as a by-product of the main audit. The code and data that
 reproduce every number, table, and figure in this paper are available at
 \url{https://github.com/tomkimpson/AISafetyUncertaintyCensus}.
-\textbf{Statement on AI usage:} The census in Section~\ref{sec:census} and Appendix~A was not compiled manually: an AI agent (Claude Code, running Claude Opus 4.8) located the source documents and extracted the reported evaluation results into the machine-readable census. All nine machine-auditable rows used in the statistical audit of Section~\ref{sec:audit} were then verified manually against the primary sources and found to agree. Of the remaining census rows, a random sample of roughly 20\% was verified manually, with no discrepancies found; the remaining $\sim$80\% are reported as extracted by the agent and have not been individually checked, and carry the corresponding risk of extraction error. All statistical analysis is implemented in the accompanying code repository and is independent of the agent.
+
+\textbf{Statement on AI usage:} The census in Section~\ref{sec:census} and Appendix~A was not compiled manually: an AI agent (Claude Code, running Claude Opus 4.8) located the source documents and extracted the reported evaluation results into the machine-readable census. The nine machine-auditable rows used in the statistical audit of Section~\ref{sec:audit}, together with the Opus~4 bio-uplift case study, were verified manually against the primary sources and found to agree. Every remaining row has since been cross-checked against its cited source and recorded, one row per cell, in \texttt{data/verification/cell\_audit.csv}. This full-census cross-check was AI-assisted but independent of the original extraction, and is fully auditable: every cited source is pinned by SHA-256 or Wayback snapshot in \texttt{data/raw/sources/MANIFEST.md}, so any reader can re-resolve the documents and re-check any cell against its recorded locator. The census is in this sense archivally reproducible: the agent's extraction is not bit-reproducible (it used no fixed seed), but the pinned sources and the per-cell audit trail let the whole census be independently re-verified. The statistical analysis is separately and procedurally reproducible: it is implemented in the accompanying code with fixed seeds and is independent of the agent, so that \texttt{make all} regenerates every derived number, table, and figure.
 
 \section*{Competing interests}
 The authors have no lab affiliation and no financial or advisory relationship with any

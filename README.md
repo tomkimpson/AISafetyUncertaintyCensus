@@ -23,19 +23,16 @@ paper/             Manuscript source will live here
 
 ## Getting started
 
-Requires Python ≥ 3.10.
+Requires Python ≥ 3.10. The environment is pinned with [uv](https://docs.astral.sh/uv/)
+(`uv.lock`) for reproducible installs:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
+uv sync --extra dev        # exact pinned environment from uv.lock
+uv run pytest              # 39 correctness tests
 ```
 
-Run the tests:
-
-```bash
-pytest
-```
+Without uv, `pip install -e ".[dev]"` works from the bounded ranges in `pyproject.toml`
+(unpinned; prefer uv for reproducibility).
 
 Reproduce everything (derived CSVs, figures, tables) with one command:
 
@@ -55,6 +52,26 @@ python scripts/make_tables.py         # -> paper/tables/*.tex
 ```
 
 All stochastic steps use fixed seeds, so outputs are bit-reproducible up to floating-point/library differences.
+
+## Reproducibility & verification
+
+Two separate claims, documented in [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md):
+
+- **The analysis is procedurally reproducible.** `make all` regenerates every derived CSV,
+  figure, and table from the census inputs with fixed seeds. `make verify` runs the tests,
+  re-resolves every cited source, checks the derived-data checksums, and runs a guard
+  (`scripts/check_paper_numbers.py`) that fails if a number hand-transcribed into the
+  manuscript drifts from the derived CSVs.
+- **The census is archivally reproducible.** It was built by an AI-assisted research pass
+  (see [`data/raw/sources/CONSTRUCTION.md`](data/raw/sources/CONSTRUCTION.md)), so it is not
+  bit-reproducible; instead every cited source is pinned in
+  [`MANIFEST.md`](data/raw/sources/MANIFEST.md) (SHA-256 for PDFs, Wayback for HTML) and
+  re-checkable with `python scripts/verify_sources.py`, and every cited value is tracked
+  against its primary source in `data/verification/cell_audit.csv`.
+
+As of the latest verification pass: all 26 cited sources resolve; the nine machine-auditable
+rows and the Opus 4 bio-uplift case study are confirmed page-level against the source cards;
+and all 48 bibliography entries resolve and match.
 
 ## License
 
