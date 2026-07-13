@@ -193,9 +193,9 @@ def build_audit_table(census_id_map=None):
             eval_name = f"{eval_name} ({cid})"
         ci = f"{float(r['ci_low']):.2f}--{float(r['ci_high']):.2f}"
         body.append(
-            f"        {eval_name}{tier} & {latex_escape(r['model'])} & {r['n']} & "
+            f"        {eval_name} & {latex_escape(r['model'])} & {r['n']} & "
             f"{float(r['score']):.2f} & {ci} & {float(r['threshold']):.2f} & "
-            f"{_verdict_short(r['verdict'])} & {r['required_n']} & "
+            f"{_verdict_short(r['verdict'])}{tier} & {r['required_n']} & "
             f"{float(r['prob_above']):.3f} & {pm1} & {cd_str} \\\\"
         )
 
@@ -206,7 +206,7 @@ def build_audit_table(census_id_map=None):
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{llccccllcccl}
         \toprule
-        eval & model & $n$ & $\hat p$ & 95\% CI & $\tau$ & verdict & req.\ $n$ & $P(p>\tau)$ & $\pm$1 & crit.\ DEFF (ICC@$m$) \\
+        eval & model & $n$ & $\hat p$ & 95\% CI & $\tau$ & verdict & $n_{\mathrm{req}}$ & $P(p>\tau)$ & $\pm$1 & crit.\ DEFF (ICC@$m$) \\
         \midrule
 """ + "\n".join(body) + r"""
         \bottomrule
@@ -218,7 +218,7 @@ def build_audit_table(census_id_map=None):
     construction and confidence level is reported in \Cref{app:robustness}.
     The Beta-Binomial posterior $P(p>\tau)$ agrees with the Wilson
     verdict on every row. \textbf{$\pm$1} flags a verdict that flips if the
-    reconstructed pass count moves by one (Wilson, 95\%). Rows marked $\dagger$ are
+    reconstructed pass count moves by one (Wilson, 95\%). Verdicts marked $\dagger$ are
     convention-dependent: they cannot resolve under the task-generalisation $n$
     but resolve below under the run-generalisation convention
     ($n = \text{tasks}\times10$ runs); the task-level estimand is our headline (\Cref{app:robustness}).
@@ -366,6 +366,7 @@ def build_census(parsed):
 \newcommand{{\CensusWithN}}{{{p_n}}}
 \newcommand{{\CensusNoN}}{{{p_non}}}
 \newcommand{{\CensusUncertainty}}{{{p_unc}}}
+\newcommand{{\CensusNoUncertainty}}{{{p_total - p_unc}}}
 \newcommand{{\CensusInterval}}{{{p_int}}}
 \newcommand{{\CensusBarePm}}{{{p_pm}}}
 \newcommand{{\CensusPostRows}}{{{len(post)}}}

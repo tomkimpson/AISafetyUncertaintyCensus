@@ -5,11 +5,11 @@
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{llccccllcccl}
         \toprule
-        eval & model & $n$ & $\hat p$ & 95\% CI & $\tau$ & verdict & req.\ $n$ & $P(p>\tau)$ & $\pm$1 & crit.\ DEFF (ICC@$m$) \\
+        eval & model & $n$ & $\hat p$ & 95\% CI & $\tau$ & verdict & $n_{\mathrm{req}}$ & $P(p>\tau)$ & $\pm$1 & crit.\ DEFF (ICC@$m$) \\
         \midrule
         SWE-bench hard (A28) & Opus 4.5 & 45 & 0.47 & 0.33--0.61 & 0.50 & \textbf{CANNOT RESOLVE} & 2430 & 0.329 & --- & 1.0 (0.0@10) \\
-        SWE-bench hard (A12)$\dagger$ & Opus 4 & 42 & 0.40 & 0.27--0.56 & 0.50 & \textbf{CANNOT RESOLVE} & 293 & 0.111 & --- & 1.0 (0.0@10) \\
-        SWE-bench hard (A13)$\dagger$ & Sonnet 4 & 42 & 0.36 & 0.23--0.51 & 0.50 & \textbf{CANNOT RESOLVE} & 128 & 0.033 & \checkmark & 1.0 (0.0@10) \\
+        SWE-bench hard (A12) & Opus 4 & 42 & 0.40 & 0.27--0.56 & 0.50 & \textbf{CANNOT RESOLVE}$\dagger$ & 293 & 0.111 & --- & 1.0 (0.0@10) \\
+        SWE-bench hard (A13) & Sonnet 4 & 42 & 0.36 & 0.23--0.51 & 0.50 & \textbf{CANNOT RESOLVE}$\dagger$ & 128 & 0.033 & \checkmark & 1.0 (0.0@10) \\
         SWE-bench hard (A14) & Claude 3.7 & 42 & 0.24 & 0.13--0.39 & 0.50 & resolved below & 34 & 0.000 & --- & 3.0 (0.222@10) \\
         METR dedup (A15) & Opus 4 & 46 & 0.33 & 0.21--0.47 & 0.20 & resolved above & 129 & 0.983 & \checkmark & 1.19 (single-task) \\
         METR dedup (A16) & Sonnet 4 & 29 & 0.28 & 0.15--0.46 & 0.20 & \textbf{CANNOT RESOLVE} & 338 & 0.871 & --- & 1.0 (single-task) \\
@@ -25,7 +25,7 @@
     construction and confidence level is reported in \Cref{app:robustness}.
     The Beta-Binomial posterior $P(p>\tau)$ agrees with the Wilson
     verdict on every row. \textbf{$\pm$1} flags a verdict that flips if the
-    reconstructed pass count moves by one (Wilson, 95\%). Rows marked $\dagger$ are
+    reconstructed pass count moves by one (Wilson, 95\%). Verdicts marked $\dagger$ are
     convention-dependent: they cannot resolve under the task-generalisation $n$
     but resolve below under the run-generalisation convention
     ($n = \text{tasks}\times10$ runs); the task-level estimand is our headline (\Cref{app:robustness}).

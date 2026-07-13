@@ -117,9 +117,11 @@ def main():
     # threshold lines
     ax.axvline(ACCEPTABLE, color=INK, lw=1.4, zorder=2)
     ax.axvline(SIGNIF, color=GREY, lw=1.2, ls=(0, (4, 2)), zorder=2)
-    ax.text(ACCEPTABLE, n + 0.62, r"$2.8\times$ acceptable line", ha="center",
+    # Right-align each label so its threshold line sits just to the right of the
+    # text rather than running through it.
+    ax.text(ACCEPTABLE - 0.08, n + 0.62, r"$2.8\times$ acceptable line", ha="right",
             va="bottom", fontsize=7.5, color=INK)
-    ax.text(SIGNIF, n + 0.62, r"$5\times$ significant-risk line", ha="center",
+    ax.text(SIGNIF - 0.08, n + 0.62, r"$5\times$ significant-risk line", ha="right",
             va="bottom", fontsize=7.5, color=GREY)
 
     ax.set_ylim(0.4, n + 1.2)
