@@ -177,7 +177,7 @@ def main():
               f"{'wayback' if wb else 'no-wayback'} {note}")
 
     with OUT.open("w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=fields)
+        w = csv.DictWriter(f, fieldnames=fields, lineterminator="\n")
         w.writeheader()
         w.writerows(out_rows)
 

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from .intervals import proportion_ci, straddles
+from .intervals import proportion_ci, proportion_directional_bounds, straddles
 
 
 def cluster_robust_se(cluster_successes, cluster_sizes):
@@ -106,7 +106,29 @@ def clustered_ci(score, n, deff, alpha=0.05, method="wilson"):
     return proportion_ci(score * n_eff, n_eff, alpha=alpha, method=method)
 
 
-def critical_deff(score, n, threshold, alpha=0.05, method="wilson", step=0.01):
+def clustered_directional_bounds(score, n, deff, alpha=0.05, method="wilson"):
+    """One-sided ``(1 - alpha)`` bounds at effective ``n / deff``."""
+    if not (0.0 <= score <= 1.0):
+        raise ValueError("score must be in [0, 1]")
+    if deff < 1.0:
+        raise ValueError("deff must be >= 1 (clustering cannot add information)")
+    n_eff = effective_n(n, deff=deff)
+    if n_eff < 1.0:
+        raise ValueError(f"deff={deff} leaves effective n {n_eff:.2f} < 1")
+    return proportion_directional_bounds(
+        score * n_eff, n_eff, alpha=alpha, method=method
+    )
+
+
+def critical_deff(
+    score,
+    n,
+    threshold,
+    alpha=0.05,
+    method="wilson",
+    step=0.01,
+    directional=True,
+):
     """Smallest design effect at which the CI straddles the threshold.
 
     The CI is recomputed at ``n_eff = n / deff`` with the same point estimate,
@@ -119,8 +141,9 @@ def critical_deff(score, n, threshold, alpha=0.05, method="wilson", step=0.01):
     A linear scan (not bisection) so no monotonicity assumption is needed.
     """
     deff = 1.0
+    interval_fn = clustered_directional_bounds if directional else clustered_ci
     while deff <= n:
-        if straddles(threshold, clustered_ci(score, n, deff, alpha, method)):
+        if straddles(threshold, interval_fn(score, n, deff, alpha, method)):
             return float(deff)
         deff += step
     return None

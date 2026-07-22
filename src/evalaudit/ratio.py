@@ -10,7 +10,7 @@ Two distinct estimands live here, and the distinction matters:
   continuous Deloitte rubric (25% / 63%), so its ``2.53×`` uplift is a
   ratio-of-means, not a ratio-of-proportions. The delta method linearises
   ``log(m1/m0)``; Fieller's theorem inverts the exact test and, unlike the
-  delta method, correctly returns an *unbounded* set when the denominator mean
+    delta method, correctly returns a *disjoint* set when the denominator mean
   is not significantly different from zero at the chosen level. At the trial's
   sample sizes the control arm sits right at that boundary (25/13 ≈ 1.92 < 1.96),
   so Fieller is the honest headline and the delta interval is a linearisation
@@ -51,20 +51,17 @@ def delta_log_ratio_ci(m1, se1, m0, se0, alpha=0.05, df=None):
     return float(r), lo, hi
 
 
-@dataclass
+@dataclass(frozen=True)
 class FiellerResult:
     """Fieller confidence set for a ratio of two independent means.
 
     ``kind`` is one of:
 
-    * ``"bounded"``          — an ordinary finite interval ``[low, high]``.
-    * ``"unbounded_above"``  — ``[low, +inf)``; the denominator is too imprecise
-                                to bound the ratio from above (``g >= 1``).
-    * ``"unbounded_below"``  — ``(-inf, high]``.
-    * ``"all_real"``         — the whole line; the data constrain the ratio not
-                                at all at this level.
-    * ``"empty"``            — no ratio is consistent (degenerate; not expected
-                                for a real point estimate).
+    ``components`` preserves the complete confidence set as closed intervals.
+    In particular, when ``g >= 1`` the set is ordinarily two disjoint rays,
+    ``(-inf, a] U [b, inf)``. It must not be collapsed to the ray containing the
+    point estimate. ``restrict_nonnegative`` may be used only when a
+    nonnegative-ratio parameter space is substantively justified.
 
     ``g = (crit * se0 / m0)^2`` is the denominator's relative variance; ``g >= 1``
     is exactly the condition ``m0 / se0 <= crit`` under which the ratio cannot be
@@ -72,15 +69,50 @@ class FiellerResult:
     """
 
     ratio: float
-    low: float
-    high: float
+    components: tuple[tuple[float, float], ...]
     kind: str
     g: float
 
     def straddles(self, threshold: float) -> bool:
-        """True if the confidence set contains ``threshold`` (an unbounded set
-        above a finite lower limit straddles every threshold above that limit)."""
-        return self.low <= threshold <= self.high
+        """True if any component of the set contains ``threshold``."""
+        return any(low <= threshold <= high for low, high in self.components)
+
+    @property
+    def low(self) -> float:
+        """Lower endpoint for a connected set; reject ambiguous disjoint sets."""
+        if len(self.components) != 1:
+            raise ValueError("disjoint Fieller set has no single lower endpoint")
+        return self.components[0][0]
+
+    @property
+    def high(self) -> float:
+        """Upper endpoint for a connected set; reject ambiguous disjoint sets."""
+        if len(self.components) != 1:
+            raise ValueError("disjoint Fieller set has no single upper endpoint")
+        return self.components[0][1]
+
+    def restrict_nonnegative(self) -> "FiellerResult":
+        """Intersect the confidence set with the justified parameter space [0, inf)."""
+        components = tuple(
+            (max(0.0, low), high)
+            for low, high in self.components
+            if max(0.0, low) <= high
+        )
+        if not components:
+            kind = "empty"
+        elif len(components) > 1:
+            kind = "disjoint"
+        else:
+            low, high = components[0]
+            if np.isneginf(low) and np.isposinf(high):
+                kind = "all_real"
+            elif np.isposinf(high):
+                kind = "unbounded_above"
+            elif np.isneginf(low):
+                kind = "unbounded_below"
+            else:
+                kind = "bounded"
+        return FiellerResult(self.ratio, components, kind, self.g)
 
 
 def fieller_ci(m1, se1, m0, se0, alpha=0.05, df=None, cov=0.0):
@@ -92,7 +124,8 @@ def fieller_ci(m1, se1, m0, se0, alpha=0.05, df=None, cov=0.0):
     probe how a paired / positively-correlated design would move the interval.
     Returns a :class:`FiellerResult`. When the denominator mean is not
     significantly different from zero at level ``alpha`` (``g >= 1``) the set is
-    unbounded -- the qualitatively honest statement the delta method hides.
+    generally disjoint on the real line. The caller may then intersect it with
+    a substantively justified parameter space such as nonnegative ratios.
     """
     if m0 <= 0:
         raise ValueError("denominator mean must be positive")
@@ -107,28 +140,40 @@ def fieller_ci(m1, se1, m0, se0, alpha=0.05, df=None, cov=0.0):
     if a > 0:
         # Parabola opens upward: solution set is between the roots (if any).
         if disc < 0:
-            return FiellerResult(r, float("nan"), float("nan"), "empty", g)
+            return FiellerResult(r, (), "empty", g)
         root = np.sqrt(disc)
         lo = (-b - root) / (2 * a)
         hi = (-b + root) / (2 * a)
-        return FiellerResult(r, float(min(lo, hi)), float(max(lo, hi)), "bounded", g)
+        component = (float(min(lo, hi)), float(max(lo, hi)))
+        return FiellerResult(r, (component,), "bounded", g)
 
     if a < 0:
         # Denominator not significant (g >= 1): parabola opens downward, so the
         # solution set is the COMPLEMENT of the interval between the roots.
         if disc <= 0:
-            return FiellerResult(r, float("-inf"), float("inf"), "all_real", g)
+            return FiellerResult(r, ((float("-inf"), float("inf")),), "all_real", g)
         root = np.sqrt(disc)
         r1 = (-b - root) / (2 * a)
         r2 = (-b + root) / (2 * a)
         lo_root, hi_root = min(r1, r2), max(r1, r2)
-        # Solution set is (-inf, lo_root] U [hi_root, inf); pick the ray holding r.
-        if r >= hi_root:
-            return FiellerResult(r, float(hi_root), float("inf"), "unbounded_above", g)
-        return FiellerResult(r, float("-inf"), float(lo_root), "unbounded_below", g)
+        components = (
+            (float("-inf"), float(lo_root)),
+            (float(hi_root), float("inf")),
+        )
+        return FiellerResult(r, components, "disjoint", g)
 
-    # a == 0 (exact boundary): fall back to a hair below to classify as unbounded.
-    return FiellerResult(r, float("-inf"), float("inf"), "all_real", g)
+    # Exact boundary: solve the remaining linear inequality b*rho + cc <= 0.
+    if b > 0:
+        return FiellerResult(
+            r, ((float("-inf"), float(-cc / b)),), "unbounded_below", g
+        )
+    if b < 0:
+        return FiellerResult(
+            r, ((float(-cc / b), float("inf")),), "unbounded_above", g
+        )
+    if cc <= 0:
+        return FiellerResult(r, ((float("-inf"), float("inf")),), "all_real", g)
+    return FiellerResult(r, (), "empty", g)
 
 
 def risk_ratio_ci(p_treat, n_treat, p_control, n_control, alpha=0.05):

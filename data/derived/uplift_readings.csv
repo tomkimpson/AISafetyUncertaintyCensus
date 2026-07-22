@@ -1,19 +1,34 @@
-reading,arm_n,se,implied_participant_sd,method,ratio,low,high,kind,straddles_2.8x,reaches_5x,includes_1x,note
-SD,8,4.5962,13.0,fieller_z,2.52,1.78,4.01,bounded,True,False,False,g=0.130
-SD,8,4.5962,13.0,fieller_t,2.52,1.67,4.54,bounded,True,False,False,df=7
-SD,8,4.5962,13.0,delta_z,2.52,1.71,3.71,bounded,True,False,False,
-SD,8,4.5962,13.0,bootstrap,2.52,1.76,3.86,bounded,True,False,False,
-SD,9,4.3333,13.0,fieller_z,2.52,1.82,3.88,bounded,True,False,False,g=0.115
-SD,9,4.3333,13.0,fieller_t,2.52,1.72,4.27,bounded,True,False,False,df=8
-SD,9,4.3333,13.0,delta_z,2.52,1.75,3.63,bounded,True,False,False,
-SD,9,4.3333,13.0,bootstrap,2.52,1.80,3.79,bounded,True,False,False,
-SD,10,4.111,13.0,fieller_z,2.52,1.84,3.78,bounded,True,False,False,g=0.104
-SD,10,4.111,13.0,fieller_t,2.52,1.77,4.08,bounded,True,False,False,df=9
-SD,10,4.111,13.0,delta_z,2.52,1.78,3.56,bounded,True,False,False,
-SD,10,4.111,13.0,bootstrap,2.52,1.82,3.70,bounded,True,False,False,
-SE,n-free,13.0,39.0,fieller_z,2.52,1.05,+inf,unbounded_above,True,True,False,g=1.039
-SE,n-free,13.0,39.0,delta_z,2.52,0.84,7.54,bounded,True,True,True,
-SE,n-free,13.0,39.0,bootstrap,2.52,1.01,46.04,bounded,True,True,False,
-CI half-width,n-free,6.6327,19.9,fieller_z,2.52,1.56,5.35,bounded,True,True,False,g=0.270
-CI half-width,n-free,6.6327,19.9,delta_z,2.52,1.44,4.41,bounded,True,False,False,
-CI half-width,n-free,6.6327,19.9,bootstrap,2.52,1.52,4.93,bounded,True,False,False,
+reading,arm_n,n_control,n_treat,df,se_control,se_treat,ratio,method,low,high,kind,real_set,nonnegative_set,straddles_2.8x,reaches_5x,includes_1x,note
+SD,8/8,8,8,14.0,4.5962,4.5962,2.52,fieller_t,1.73,4.24,bounded,"[1.73, 4.24]","[1.73, 4.24]",True,False,False,Welch-Satterthwaite df=14.000; g=0.155; displayed set restricted to ratio >= 0
+SD,8/8,8,8,14.0,4.5962,4.5962,2.52,delta_t,1.65,3.85,bounded,,,True,False,False,
+SD,8/8,8,8,14.0,4.5962,4.5962,2.52,bootstrap,1.76,3.86,bounded,,,True,False,False,
+SD,8/9,8,9,14.766,4.5962,4.3333,2.52,fieller_t,1.74,4.21,bounded,"[1.74, 4.21]","[1.74, 4.21]",True,False,False,Welch-Satterthwaite df=14.766; g=0.154; displayed set restricted to ratio >= 0
+SD,8/9,8,9,14.766,4.5962,4.3333,2.52,delta_t,1.66,3.83,bounded,,,True,False,False,
+SD,8/9,8,9,14.766,4.5962,4.3333,2.52,bootstrap,1.77,3.89,bounded,,,True,False,False,
+SD,8/10,8,10,15.142,4.5962,4.111,2.52,fieller_t,1.75,4.20,bounded,"[1.75, 4.20]","[1.75, 4.20]",True,False,False,Welch-Satterthwaite df=15.142; g=0.153; displayed set restricted to ratio >= 0
+SD,8/10,8,10,15.142,4.5962,4.111,2.52,delta_t,1.66,3.82,bounded,,,True,False,False,
+SD,8/10,8,10,15.142,4.5962,4.111,2.52,bootstrap,1.78,3.87,bounded,,,True,False,False,
+SD,9/8,9,8,14.766,4.3333,4.5962,2.52,fieller_t,1.76,4.08,bounded,"[1.76, 4.08]","[1.76, 4.08]",True,False,False,Welch-Satterthwaite df=14.766; g=0.137; displayed set restricted to ratio >= 0
+SD,9/8,9,8,14.766,4.3333,4.5962,2.52,delta_t,1.69,3.76,bounded,,,True,False,False,
+SD,9/8,9,8,14.766,4.3333,4.5962,2.52,bootstrap,1.79,3.79,bounded,,,True,False,False,
+SD,9/9,9,9,16.0,4.3333,4.3333,2.52,fieller_t,1.77,4.05,bounded,"[1.77, 4.05]","[1.77, 4.05]",True,False,False,Welch-Satterthwaite df=16.000; g=0.135; displayed set restricted to ratio >= 0
+SD,9/9,9,9,16.0,4.3333,4.3333,2.52,delta_t,1.70,3.74,bounded,,,True,False,False,
+SD,9/9,9,9,16.0,4.3333,4.3333,2.52,bootstrap,1.80,3.79,bounded,,,True,False,False,
+SD,9/10,9,10,16.791,4.3333,4.111,2.52,fieller_t,1.78,4.04,bounded,"[1.78, 4.04]","[1.78, 4.04]",True,False,False,Welch-Satterthwaite df=16.791; g=0.134; displayed set restricted to ratio >= 0
+SD,9/10,9,10,16.791,4.3333,4.111,2.52,delta_t,1.70,3.73,bounded,,,True,False,False,
+SD,9/10,9,10,16.791,4.3333,4.111,2.52,bootstrap,1.81,3.77,bounded,,,True,False,False,
+SD,10/8,10,8,15.142,4.111,4.5962,2.52,fieller_t,1.78,3.96,bounded,"[1.78, 3.96]","[1.78, 3.96]",True,False,False,Welch-Satterthwaite df=15.142; g=0.123; displayed set restricted to ratio >= 0
+SD,10/8,10,8,15.142,4.111,4.5962,2.52,delta_t,1.72,3.70,bounded,,,True,False,False,
+SD,10/8,10,8,15.142,4.111,4.5962,2.52,bootstrap,1.81,3.71,bounded,,,True,False,False,
+SD,10/9,10,9,16.791,4.111,4.3333,2.52,fieller_t,1.80,3.93,bounded,"[1.80, 3.93]","[1.80, 3.93]",True,False,False,Welch-Satterthwaite df=16.791; g=0.121; displayed set restricted to ratio >= 0
+SD,10/9,10,9,16.791,4.111,4.3333,2.52,delta_t,1.73,3.67,bounded,,,True,False,False,
+SD,10/9,10,9,16.791,4.111,4.3333,2.52,bootstrap,1.82,3.70,bounded,,,True,False,False,
+SD,10/10,10,10,18.0,4.111,4.111,2.52,fieller_t,1.81,3.92,bounded,"[1.81, 3.92]","[1.81, 3.92]",True,False,False,Welch-Satterthwaite df=18.000; g=0.119; displayed set restricted to ratio >= 0
+SD,10/10,10,10,18.0,4.111,4.111,2.52,delta_t,1.74,3.65,bounded,,,True,False,False,
+SD,10/10,10,10,18.0,4.111,4.111,2.52,bootstrap,1.82,3.70,bounded,,,True,False,False,
+SE,n-free,,,,13.0,13.0,2.52,fieller_z,1.05,+inf,unbounded_above,"[-inf, -131.18] U [1.05, +inf]","[1.05, +inf]",True,True,False,normal critical value; g=1.039; displayed set restricted to ratio >= 0
+SE,n-free,,,,13.0,13.0,2.52,delta_z,0.84,7.54,bounded,,,True,True,True,
+SE,n-free,,,,13.0,13.0,2.52,bootstrap,n/a,n/a,not_identified,,,False,False,False,participant-level dispersion is not identified without arm sizes
+CI half-width,n-free,,,,6.6327,6.6327,2.52,fieller_z,1.56,5.35,bounded,"[1.56, 5.35]","[1.56, 5.35]",True,True,False,normal critical value; g=0.270; displayed set restricted to ratio >= 0
+CI half-width,n-free,,,,6.6327,6.6327,2.52,delta_z,1.44,4.41,bounded,,,True,False,False,
+CI half-width,n-free,,,,6.6327,6.6327,2.52,bootstrap,n/a,n/a,not_identified,,,False,False,False,participant-level dispersion is not identified without arm sizes

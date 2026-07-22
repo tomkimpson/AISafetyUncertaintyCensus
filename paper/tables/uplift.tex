@@ -2,35 +2,43 @@
 \begin{table}[t]
     \centering
     \small
+    \resizebox{\textwidth}{!}{%
     \begin{tabular}{llllll}
         \toprule
-        reading of ``$\pm 13\%$'' & arm & Fieller 95\% set & delta 95\% CI & bootstrap 95\% CI & verdict \\
+        reading of ``$\pm 13\%$'' & $n_C/n_T$ & Fieller 95\% set & delta 95\% CI & bootstrap 95\% CI & verdict \\
         \midrule
-        SD & 8 & 1.7$\times$--4.5$\times$ & 1.7$\times$--3.7$\times$ & 1.8$\times$--3.9$\times$ & straddles $2.8\times$ \\
-        SD & 9 & 1.7$\times$--4.3$\times$ & 1.8$\times$--3.6$\times$ & 1.8$\times$--3.8$\times$ & straddles $2.8\times$ \\
-        SD & 10 & 1.8$\times$--4.1$\times$ & 1.8$\times$--3.6$\times$ & 1.8$\times$--3.7$\times$ & straddles $2.8\times$ \\
-        SE & $n$-free & 1.1$\times$--$\infty$\,(unbounded) & 0.8$\times$--7.5$\times$ & 1.0$\times$--46.0$\times$ & straddles $2.8\times$; reaches $5\times$ \\
-        CI half-width & $n$-free & 1.6$\times$--5.3$\times$ & 1.4$\times$--4.4$\times$ & 1.5$\times$--4.9$\times$ & straddles $2.8\times$; reaches $5\times$ \\
+        SD & 8/8 & 1.7$\times$--4.2$\times$ & 1.6$\times$--3.9$\times$ & 1.8$\times$--3.9$\times$ & straddles $2.8\times$ \\
+        SD & 8/9 & 1.7$\times$--4.2$\times$ & 1.7$\times$--3.8$\times$ & 1.8$\times$--3.9$\times$ & straddles $2.8\times$ \\
+        SD & 8/10 & 1.8$\times$--4.2$\times$ & 1.7$\times$--3.8$\times$ & 1.8$\times$--3.9$\times$ & straddles $2.8\times$ \\
+        SD & 9/8 & 1.8$\times$--4.1$\times$ & 1.7$\times$--3.8$\times$ & 1.8$\times$--3.8$\times$ & straddles $2.8\times$ \\
+        SD & 9/9 & 1.8$\times$--4.0$\times$ & 1.7$\times$--3.7$\times$ & 1.8$\times$--3.8$\times$ & straddles $2.8\times$ \\
+        SD & 9/10 & 1.8$\times$--4.0$\times$ & 1.7$\times$--3.7$\times$ & 1.8$\times$--3.8$\times$ & straddles $2.8\times$ \\
+        SD & 10/8 & 1.8$\times$--4.0$\times$ & 1.7$\times$--3.7$\times$ & 1.8$\times$--3.7$\times$ & straddles $2.8\times$ \\
+        SD & 10/9 & 1.8$\times$--3.9$\times$ & 1.7$\times$--3.7$\times$ & 1.8$\times$--3.7$\times$ & straddles $2.8\times$ \\
+        SD & 10/10 & 1.8$\times$--3.9$\times$ & 1.7$\times$--3.6$\times$ & 1.8$\times$--3.7$\times$ & straddles $2.8\times$ \\
+        SE & $n$-free & 1.1$\times$--$\infty$\,(unbounded) & 0.8$\times$--7.5$\times$ & not identified & straddles $2.8\times$; reaches $5\times$ \\
+        CI half-width & $n$-free & 1.6$\times$--5.3$\times$ & 1.4$\times$--4.4$\times$ & not identified & straddles $2.8\times$; reaches $5\times$ \\
         \bottomrule
     \end{tabular}
+    }
     \caption{Uplift-ratio interval for the Opus~4 bio-uplift trial
     ($0.63/0.25 = 2.52\times$; the card reports $2.53\times$ from unrounded means),
     computed as a ratio of two arm means propagating the card's unlabelled
-    ``$\pm 13\%$'' dispersion under every admissible reading. Fieller (headline)
-    inverts the exact test, at the small-sample $t(\mathrm{df}=n-1)$ critical value
-    where a per-arm $n$ is defined (the SD reading) and at the normal $z$ for the
-    $n$-free readings; the delta method is a linearisation check that stays finite
-    even when the exact set is unbounded; the parametric bootstrap draws
-    scaled-Beta arms on $[0,100]$. \textbf{Every reading straddles the
-    $2.8\times$ acceptable line}; under the most conventional (SD) reading the set
-    is bounded and also excludes the $5\times$ significant-risk line. Endpoints are
+    ``$\pm 13\%$'' dispersion under the three conventional readings considered.
+    The SD rows enumerate all nine ordered arm-size combinations allowed by the
+    reported 8--10 participants per arm and use Welch--Satterthwaite degrees of
+    freedom; the $n$-free rows use a normal critical value. The participant-level
+    bootstrap is not identified for the $n$-free readings. \textbf{Every row
+    straddles the $2.8\times$ acceptable line}; under the SD reading the set is
+    bounded and excludes the $5\times$ significant-risk line. Endpoints are
     given to one decimal because propagating the card's integer-rounded inputs
     shifts each by $0.1$--$0.4\times$, so only the binary straddle verdict is
     rounding-robust. Under the standard-error reading the control mean sits just
     below significance at 95\% ($25/13 \approx 1.92 < 1.96$), so the Fieller set is
     then \emph{unbounded above} and the finite delta interval is a linearisation
-    artifact; this prong is conditional on that reading and on the inputs' rounding
-    (a control mean of $25.5$ or a dispersion of $12.7$ would bound it), whereas the
-    straddle holds at every corner.}
+    artifact. On the whole real line that Fieller set is
+    $(-\infty,-131.2]\cup[1.05,\infty)$; the table displays $[1.05,\infty)$ only
+    after intersecting with the substantively justified nonnegative-ratio
+    parameter space.}
     \label{tab:uplift}
 \end{table}

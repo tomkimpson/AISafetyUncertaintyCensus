@@ -2,7 +2,7 @@
 """The headline figure: confidence intervals against decision thresholds.
 
 A grouped forest plot. Each audited row is drawn as its reported score (point)
-with the 95% CI (thick bar) against the group's decision threshold (vertical
+with its one-sided 95% directional bounds (thick bar) against the group's decision threshold (vertical
 line); a thin grey whisker behind shows the CI widened to the effective sample
 size under item clustering (ICC=0.2 at the assumed cluster size), where
 clustering applies. Rows whose naive CI crosses the threshold cannot resolve
@@ -86,13 +86,13 @@ def main():
         y_first = y
         for r in grows:
             score = float(r["score"])
-            lo, hi = float(r["ci_low"]), float(r["ci_high"])
-            straddle = bool(int(r["straddles"]))
+            lo, hi = float(r["directional_low"]), float(r["directional_high"])
+            straddle = bool(int(r["unresolved_primary"]))
             color = VERMILION if straddle else BLUE
 
             # Clustered CI (where clustering applies) as a thin grey whisker
             # behind the naive bar.
-            lo_c, hi_c = r.get("ci_low_clust"), r.get("ci_high_clust")
+            lo_c, hi_c = r.get("directional_low_clust"), r.get("directional_high_clust")
             if lo_c and hi_c and r.get("assumed_m"):
                 for x in (float(lo_c), float(hi_c)):
                     ax.plot([x, x], [y - 0.14, y + 0.14], color=GREY,
@@ -150,15 +150,15 @@ def main():
     legend_handles = [
         Line2D([], [], color=BLUE, lw=2.2, marker="o", ms=6,
                markerfacecolor=BLUE, markeredgecolor=BLUE,
-               label="resolved: 95% CI clear of threshold"),
+               label="resolved: one-sided 95% bound clears threshold"),
         Line2D([], [], color=VERMILION, lw=2.2, marker="o", ms=6,
                markerfacecolor="white", markeredgecolor=VERMILION,
                markeredgewidth=1.4,
-               label="cannot resolve: 95% CI straddles threshold"),
+               label="cannot resolve: one-sided 95% bound reaches threshold"),
         Line2D([], [], color=INK, lw=1.4, marker="|", ms=0, ls="-",
                label=r"decision threshold $\tau$"),
         Line2D([], [], color=GREY, lw=0.9,
-               label="95% CI under clustering (ICC = 0.2)"),
+               label="one-sided 95% bounds under clustering (ICC = 0.2)"),
     ]
     ax.legend(handles=legend_handles, loc="upper center",
               bbox_to_anchor=(0.42, -0.10), ncol=2, frameon=False,

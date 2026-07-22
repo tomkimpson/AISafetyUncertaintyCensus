@@ -4,7 +4,7 @@ This repository has two independent reproducibility claims. Keep them separate:
 
 1. **The analysis is procedurally reproducible.** Given the census inputs, the statistics,
    figures, and tables regenerate deterministically (fixed seeds, pinned environment).
-2. **The census is archivally reproducible, not procedurally.** It was built by an
+2. **The structured corpus is archivally auditable, not procedurally reproducible.** It was built and recoded through
    AI-assisted research pass that cannot be bit-reproduced (see
    [`data/raw/sources/CONSTRUCTION.md`](../data/raw/sources/CONSTRUCTION.md)); instead every
    cited source is pinned and every cited value is checkable against it.
@@ -13,7 +13,7 @@ This repository has two independent reproducibility claims. Keep them separate:
 
 ```bash
 uv sync --extra dev        # install the exact pinned environment from uv.lock
-uv run pytest              # 39 correctness tests against hand-computed references
+uv run pytest              # correctness tests against reference values
 uv run make all            # regenerate data/derived/*, paper/figures/*, paper/tables/*
 uv run make verify-derived # committed derived CSVs match data/derived/CHECKSUMS.sha256
 uv run make check-numbers  # numbers hand-typed into paper/main.tex still match the CSVs
@@ -33,7 +33,7 @@ uv run make check-numbers  # numbers hand-typed into paper/main.tex still match 
   `audited.csv`): their figures reach the paper as prose, and this guard fails if that prose
   drifts from the data.
 
-## 2. Re-verify the census against primary sources
+## 2. Re-verify the structured corpus against primary sources
 
 ### 2a. Source provenance (automated)
 
@@ -50,9 +50,9 @@ Wayback snapshot. Expect **26/26 resolve**.
 - **HTML sources** return different bytes per fetch (dynamic markup), so they are **not**
   pinned by SHA; cite the **Wayback snapshot** URL from the provenance CSV instead.
 
-### 2b. Claim fidelity (agent-fetched, human-signed)
+### 2b. Claim fidelity and the human sign-off gate
 
-`data/verification/cell_audit.csv` holds one row per census entry with the claimed
+`data/verification/cell_audit.csv` holds one row per screened record with the claimed
 (threshold, n, score, uncertainty, direction), the cited locator, a `value_status`, and a
 confirming quote. Regenerate the skeleton (preserving recorded confirmations) with:
 
@@ -60,21 +60,22 @@ confirming quote. Regenerate the skeleton (preserving recorded confirmations) wi
 python scripts/seed_cell_audit.py
 ```
 
-Verification status: **all 98 census rows have been checked against their primary sources**
-(86 `confirmed`, 12 `confirmed_note`; no `unverified`, `mismatch`, or `unresolved` rows
-remain). The verification was originally staged by audit impact, and that ordering still
-explains where the strongest evidence lies:
+The cell-audit statuses are an AI-assisted claim-fidelity pass, not human sign-off. The
+canonical analysis input is `data/raw/census_records.csv`, which additionally records
+eligibility, denominator status, and uncertainty class. The original staging explains where
+the most detailed source checks lie:
 
-- **Tier 0 — headline.** The nine `evals.csv` rows + the Opus 4 bio-uplift case study,
-  confirmed page-level against the source PDFs. These carry the paper's central claims.
+- **Tier 0 — central reconstructions.** The ten model-level `evals.csv` rows (nine source
+  records because A4 maps to two models) plus the Opus 4 bio-uplift case study.
 - **Tier 1 — rest of Anthropic.** Confirmed page-level.
-- **Tiers 2–3 — OpenAI / DeepMind / third-party / post-2025 rows.** Confirmed against the
-  cited locator in each source; do not affect the nine-row headline.
+- **Tiers 2–3 — OpenAI / DeepMind / third-party / post-2025 rows.** Cross-checked against
+  the cited locator in each source.
 
-**Sign-off is complete when** `cell_audit.csv` has no `mismatch` or `unresolved` rows; any
-residual `confirmed_note` (faithful to the cited source but carrying a documented caveat —
-e.g. the 17-vs-18/33 cross-card discrepancy, or a value the source states only in a summary
-table) is an accepted disposition. As of the latest pass this criterion is met.
+**Submission sign-off is complete only when** every eligible record in
+`data/verification/human_signoff.csv` is changed from `pending` to a human disposition and
+has a signer and date. That gate is currently pending. Regenerating the statistical outputs
+does not satisfy it, and the manuscript must not claim completed human verification until
+the author completes the sheet.
 
 ### 2c. Bibliography (automated)
 

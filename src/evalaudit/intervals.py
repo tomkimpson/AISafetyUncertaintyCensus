@@ -44,6 +44,18 @@ def proportion_ci(successes, n, alpha=0.05, method="wilson"):
     return float(np.clip(low, 0.0, 1.0)), float(np.clip(high, 0.0, 1.0))
 
 
+def proportion_directional_bounds(successes, n, alpha=0.05, method="wilson"):
+    """Return the lower and upper one-sided ``(1 - alpha)`` bounds.
+
+    The pair is computed as the endpoints of the central ``(1 - 2*alpha)``
+    interval.  Each endpoint is therefore a one-sided ``(1 - alpha)`` bound;
+    the pair is not a simultaneous ``(1 - alpha)`` interval.
+    """
+    if not (0.0 < alpha < 0.5):
+        raise ValueError("alpha must be in (0, 0.5) for directional bounds")
+    return proportion_ci(successes, n, alpha=2.0 * alpha, method=method)
+
+
 def bootstrap_ci(successes, n, alpha=0.05, n_boot=20000, seed=0):
     """Percentile bootstrap CI for a proportion.
 
@@ -61,10 +73,10 @@ def bootstrap_ci(successes, n, alpha=0.05, n_boot=20000, seed=0):
 
 
 def straddles(threshold, ci):
-    """True if ``threshold`` lies strictly inside the interval ``ci``.
+    """True if ``threshold`` lies inside or on the boundary of ``ci``.
 
     A straddling interval means the eval cannot resolve which side of the
     threshold the model is on at the chosen confidence level.
     """
     low, high = ci
-    return low < threshold < high
+    return low <= threshold <= high

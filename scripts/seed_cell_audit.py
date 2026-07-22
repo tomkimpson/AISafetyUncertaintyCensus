@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 """Seed (and re-seed) the per-cell claim-fidelity audit log.
 
-Every row of the census (``data/raw/census_full.md``, parsed with the SAME
-``parse_census`` the paper's tables use, so IDs line up with Table 4) becomes one
+Every screened record in canonical ``data/raw/census_records.csv`` becomes one
 row here, carrying the claimed (threshold, n, score, uncertainty, direction) and a
 ``value_status`` for whether the cited value was confirmed against the primary
 source. Confirmations recorded in the ``VERIFIED`` table below are re-applied on
@@ -33,9 +32,12 @@ from make_tables import parse_census  # noqa: E402  (reuse the canonical parser)
 OUT = ROOT / "data" / "verification" / "cell_audit.csv"
 PROV = ROOT / "data" / "verification" / "source_provenance.csv"
 
-_FRAMEWORK_LETTER = {"Anthropic-RSP": "A", "OpenAI-PF": "O", "GDM-FSF": "D", "3rd-party": "T"}
-_HEADER = {"Anthropic-RSP": "Anthropic", "OpenAI-PF": "OpenAI", "GDM-FSF": "DeepMind",
-           "3rd-party": "3rd-party"}
+_LEGACY_FRAMEWORK = {
+    "Anthropic": "Anthropic-RSP",
+    "OpenAI": "OpenAI-PF",
+    "DeepMind": "GDM-FSF",
+    "3rd-party": "3rd-party",
+}
 
 # Source ids. The first block reuses the slugs in source_provenance.csv so the
 # source_resolves join works; the second block are readable ids for sources added
@@ -217,8 +219,9 @@ def _tokens(model):
 
 def _match(row):
     toks = _tokens(row["model"])
+    framework = _LEGACY_FRAMEWORK.get(row["framework"], row["framework"])
     for v in V:
-        if row["framework"] != v["fw"]:
+        if framework != v["fw"]:
             continue
         if "domain" in v and not row["domain"].startswith(v["domain"]):
             continue
@@ -241,18 +244,16 @@ def load_resolves():
 def main():
     parsed = parse_census()
     resolves = load_resolves()
-    counters = {}
     rows = []
     for r in parsed:
-        letter = _FRAMEWORK_LETTER.get(r["framework"], "X")
-        counters[letter] = counters.get(letter, 0) + 1
-        row_id = f"{letter}{counters[letter]}"
         v = _match(r)
         status = v["status"] if v else "unverified"
         source_id = v["source"] if v else ""
         rows.append({
-            "row_id": row_id, "generation": r["generation"],
-            "framework": _HEADER.get(r["framework"], r["framework"]),
+            "row_id": r["row_id"], "generation": r["generation"],
+            "include_primary": r["include_primary"],
+            "exclusion_reason": r["exclusion_reason"],
+            "framework": r["framework"],
             "domain": r["domain"], "model": r["model"],
             "claimed_threshold": r["threshold"], "claimed_n": r["n"],
             "claimed_score": r["score"], "claimed_uncertainty": r["ci"],
@@ -266,13 +267,14 @@ def main():
         })
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    fields = ["row_id", "generation", "framework", "domain", "model",
+    fields = ["row_id", "generation", "include_primary", "exclusion_reason",
+              "framework", "domain", "model",
               "claimed_threshold", "claimed_n", "claimed_score",
               "claimed_uncertainty", "claimed_direction", "citation",
               "source_id", "source_resolves", "cited_locator", "value_status",
               "note", "coder", "date"]
     with OUT.open("w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=fields)
+        w = csv.DictWriter(f, fieldnames=fields, lineterminator="\n")
         w.writeheader()
         w.writerows(rows)
 

@@ -58,4 +58,4 @@ check-numbers:
 clean:
 	rm -f data/derived/*.csv
 	rm -f paper/figures/ci_straddle.* paper/figures/uplift_straddle.*
-	rm -f paper/tables/audit.tex paper/tables/census.tex paper/tables/census_counts.tex paper/tables/uplift.tex
+	rm -f paper/tables/audit.tex paper/tables/census.tex paper/tables/census_counts.tex paper/tables/census_sensitivity.tex paper/tables/uplift.tex

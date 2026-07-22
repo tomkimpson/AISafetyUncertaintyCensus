@@ -1,85 +1,71 @@
-# How the census was constructed
+# How the structured corpus was constructed
 
-This documents how `census_full.md` and `evals.csv` were produced, so a third party can
-judge and re-verify them. It is deliberately honest about what is and is not reproducible.
+This document defines the sampling frame, record unit, eligibility rules, and coding fields
+for `data/raw/census_records.csv`. It distinguishes reproducible analysis from an
+AI-assisted research pass that is not bit-reproducible.
 
-## What the census is
+## Sampling frame and cutoff
 
-A hand-curated table of **governance-relevant dangerous-capability evaluation results**
-drawn from public frontier-safety frameworks and vendor model/system cards. 98 rows span the
-Claude 4 / Gemini 2.5 / GPT-4.x generation through the GPT-5.6 Preview card of June 2026.
-`census_full.md` is the archival record; `evals.csv` is the machine-auditable subset (the
-nine rows that pair an integer pass count with an operative numeric threshold).
+The fixed frame is the 26 version-pinned public documents in `MANIFEST.md`, retrieved and
+screened through 30 June 2026. They cover Anthropic RSP system cards, OpenAI Preparedness
+system cards, Google DeepMind FSF reports, and public METR, UK AISI, and Apollo reports.
+This is purposive coverage of the listed framework families, not an exhaustive population of
+all dangerous-capability evaluations.
 
-## How it was built (and why it is not bit-reproducible)
+The screen produced 98 candidate records. The primary corpus contains 96 eligible records.
+Two remain in the canonical file with `include_primary=false` and an explicit reason:
 
-The census was assembled by an **AI-assisted research pass** (a language model with web/PDF
-access) over the public documents listed in `MANIFEST.md`, followed by manual review and
-correction. That generation step is **inherently non-deterministic**: it had no fixed seed,
-prompt log, or tool trace, and re-running a model would not reproduce the table byte-for-byte.
-We therefore do **not** claim procedural reproducibility for census *construction*.
+- T7 is a benchmark description without an evaluated-model result.
+- A32 was explicitly excluded from the source's RSP determination.
 
-What we do provide, and what a third party can check, is **archival reproducibility**:
+`census_full.md` is retained as the legacy narrative extraction, not as the canonical input.
 
-1. **Fixed sources.** Every cited document is pinned in `MANIFEST.md` by canonical URL plus a
-   stable SHA-256 (PDFs) or a dated Wayback snapshot (HTML). `scripts/verify_sources.py`
-   re-resolves and re-hashes them into `data/verification/source_provenance.csv`.
-2. **Claim fidelity.** `data/verification/cell_audit.csv` records, per census row, whether the
-   cited value was confirmed against the primary source at the cited section/page, with a
-   confirming quote. This is the reproducible check that replaces "trust the model."
+## Record unit
 
-So the census is re-derivable **from fixed documents by a human or agent following the coding
-rules below** — not by re-running an opaque generation.
+A record is one source-reported table row or prose result whose score is mapped to a
+safety-relevant capability or deployment determination. Source display granularity is
+preserved. A record may therefore bundle models or metrics when the source gives no
+disaggregation. The corpus supports an analysis of reporting practice; its rows are not
+asserted to be independent evaluation outcomes.
 
-## Inclusion criterion
+The model-level threshold audit has a different unit. `evals.csv` expands shared source
+record A4 into separate Opus 4 and Sonnet 4 results, so it contains ten model-level results.
+Both retain `record_id=A4`; this makes the one-to-many mapping explicit.
 
-A row is included iff it is **governance-relevant**: an evaluation a framework uses to make a
-safety-relevant decision about a model's capability or deployment (a score checked against a
-threshold, or mapped to a capability level / ASL / CCL tier). A bioweapons-knowledge score
-measured against a threshold is in; a general benchmark (MMLU, a coding leaderboard) reported
-in the same card but tied to no safety decision is out. (Same wording as `main.tex` §census.)
+## Canonical fields and coding rules
 
-## Field definitions
+`census_records.csv` carries the source text plus explicit analysis fields:
 
-| field | meaning |
+| field | rule |
 |---|---|
-| framework | RSP (Anthropic) / PF (OpenAI) / FSF (DeepMind) / third-party |
-| domain / capability | the evaluated capability (CBRN, autonomy, cyber, persuasion, …) |
-| model | the evaluated model(s); a cell may bundle models ("Opus 4 / Sonnet 4") |
-| threshold | the operative go/no-go line — numeric where one exists, else the prose tier |
-| n | sample size (tasks / questions / trials / participants), or `NOT REPORTED` |
-| score | the reported figure, verbatim in the units the source uses |
-| CI / uncertainty | the source's uncertainty cell, verbatim; `none` if absent |
-| direction | which side of the threshold the source places the result |
-| citation | document + section/page |
-| is_illustrative (evals.csv) | `0` for real census numbers; `1` reserved for demo rows (none currently) |
+| `record_id` | Stable framework letter plus source-row number. |
+| `include_primary` | `true` only when the record meets the governance-relevance rule. |
+| `exclusion_reason` | Required for screened records excluded from the primary corpus. |
+| `n_status` | `score_denominator`, `partial_or_indirect`, or `not_reported`. |
+| `uncertainty_class` | `proper_interval`, `bare_dispersion`, or `none`. |
+| `source_id` | Key into the pinned-source manifest. |
 
-## Coding rules for ambiguous cases
+A score denominator is a count tied to the displayed score. Numerical information such as
+“over 100 attempts” is `partial_or_indirect` when it does not identify that denominator.
+This replaces the legacy rule that treated any digit in the `n` cell as a reported sample
+size.
 
-These are the judgment calls a re-coder must reproduce:
+A proper interval states an inferential construction and coverage or credibility level. An
+unlabelled “±” is a bare dispersion, not an interval. Percentages, medians, pass@k,
+correlations, and counts remain in source units. Cross-source discrepancies remain attached
+to their source record and are documented in `data/verification/cell_audit.csv`.
 
-- **Unlabelled dispersion.** Where a source gives "±x%" with no statement of whether it is an
-  SD, SE, or CI (e.g. Anthropic's uplift "±13%"), the value is recorded verbatim in the
-  uncertainty cell and classified as a *bare ±*, **not** a proper interval. The uplift case
-  study propagates every admissible reading rather than guessing one.
-- **NOT REPORTED n.** A row counts as reporting a sample size iff its `n` cell contains a
-  digit; a bare "NOT REPORTED" is the only n-absent pattern.
-- **Proper interval vs bare ±.** "Proper" means a CI / credible interval / bootstrap CI /
-  error bar with a stated coverage; a bare "±" is not. (`make_tables.py:_has_uncertainty` /
-  `_is_proper_interval` implement this split; the headline counts derive from it.)
-- **Score units left as reported.** Percentages, medians, pass@k, correlations, and integer
-  pass counts are kept in their source units; only rows expressible as an integer count over a
-  Bernoulli denominator enter `evals.csv` as auditable.
-- **Cross-source discrepancies.** Where two vendor documents disagree (e.g. the Opus 4 card
-  states Claude 3.7 scored 18/33 on bioweapons knowledge while the 3.7 card itself states
-  17/33), the census records the value from the document it cites and flags the discrepancy
-  in `cell_audit.csv` rather than silently picking one.
-- **Generation label.** The "Post-2025 generation" heading is a label only; those rows are
-  part of the single 98-row population and its headline counts (see `census_full.md`).
+## Reproducibility and verification
 
-## Known soft spots (carried from the research pass)
+The initial extraction and later recoding were AI-assisted and had no fixed prompt/tool log,
+so corpus construction is not procedurally reproducible. The repository instead provides:
 
-Recorded in the "Caveats" section of `census_full.md` and, per row, in `cell_audit.csv`:
-two GPT-4o cells read via an HTML summarizer rather than the raw PDF; some Apollo
-percentages not machine-verifiable; the unlabelled "±" ambiguity above. These are disclosed,
-not hidden.
+1. version-pinned sources in `MANIFEST.md`;
+2. stable record IDs and source locators in `census_records.csv`;
+3. claim-fidelity notes in `data/verification/cell_audit.csv`; and
+4. a submission gate in `data/verification/human_signoff.csv`.
+
+The sign-off sheet deliberately remains `pending` until the author verifies each eligible
+record. Exact corpus fractions should not be represented as human-verified before that gate
+is complete. The downstream statistical analysis is separately reproducible with fixed
+seeds via `make all`.
