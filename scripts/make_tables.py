@@ -6,11 +6,12 @@ Emits into ``paper/tables/``:
 
 * ``uplift.tex``        -- Table 1: ratio-of-means intervals for the bio-uplift
                            trial, every reading x method (from uplift_readings.csv).
-* ``audit.tex``         -- Table 2: the nine threshold-vs-interval rows, with the
+* ``audit.tex``         -- Table 2: threshold-vs-bound rows, with the
                            +/-1-count and clustering columns (from audited.csv).
-* ``census.tex``        -- Appendix census longtable, parsed from census_full.md.
+* ``census.tex``        -- Appendix corpus longtable, parsed from census_records.csv.
 * ``census_counts.tex`` -- \\newcommand macros with the EXACT census counts, so the
                            main-text summary cites auditable numbers, not "~60".
+* ``census_sensitivity.tex`` -- Primary-vs-screened coding sensitivity.
 
 Run after uplift_analysis.py and run_audit.py (which write the derived CSVs).
 """
@@ -18,13 +19,12 @@ Run after uplift_analysis.py and run_audit.py (which write the derived CSVs).
 from __future__ import annotations
 
 import csv
-import re
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DERIVED = ROOT / "data" / "derived"
-CENSUS_MD = ROOT / "data" / "raw" / "census_full.md"
+CENSUS_CSV = ROOT / "data" / "raw" / "census_records.csv"
 TABLES = ROOT / "paper" / "tables"
 
 
@@ -88,17 +88,19 @@ def build_uplift_table():
     body = []
     for (reading, arm) in order:
         methods = keyed[(reading, arm)]
-        # Headline Fieller: the small-sample t(df=n-1) interval where a per-arm n
-        # is defined (the SD reading); the n-free readings (SE, CI half-width) have
-        # no df and fall back to the normal-z construction.
+        # Headline Fieller: Welch-t where arm sizes are defined; normal-z for
+        # the two n-free interpretations.
         fie = methods.get("fieller_t") or methods.get("fieller_z")
-        dlt = methods.get("delta_z")
+        dlt = methods.get("delta_t") or methods.get("delta_z")
         boo = methods.get("bootstrap")
         fie_s = _ci_str(fie["low"], fie["high"])
         if fie["kind"] == "unbounded_above":
             fie_s += r"\,(unbounded)"
         del_s = _ci_str(dlt["low"], dlt["high"])
-        boo_s = _ci_str(boo["low"], boo["high"]) if boo["kind"] != "infeasible" else "infeasible"
+        boo_s = (
+            _ci_str(boo["low"], boo["high"])
+            if boo["kind"] == "bounded" else "not identified"
+        )
         # verdict vs 2.8x / 5x, taken from the Fieller row (the headline method)
         vparts = [r"straddles $2.8\times$" if fie["straddles_2.8x"] == "True"
                   else r"resolves $2.8\times$"]
@@ -115,32 +117,34 @@ def build_uplift_table():
 \begin{table}[t]
     \centering
     \small
+    \resizebox{\textwidth}{!}{%
     \begin{tabular}{llllll}
         \toprule
-        reading of ``$\pm 13\%$'' & arm & Fieller 95\% set & delta 95\% CI & bootstrap 95\% CI & verdict \\
+        reading of ``$\pm 13\%$'' & $n_C/n_T$ & Fieller 95\% set & delta 95\% CI & bootstrap 95\% CI & verdict \\
         \midrule
 """ + "\n".join(body) + r"""
         \bottomrule
     \end{tabular}
+    }
     \caption{Uplift-ratio interval for the Opus~4 bio-uplift trial
     ($0.63/0.25 = 2.52\times$; the card reports $2.53\times$ from unrounded means),
     computed as a ratio of two arm means propagating the card's unlabelled
-    ``$\pm 13\%$'' dispersion under every admissible reading. Fieller (headline)
-    inverts the exact test, at the small-sample $t(\mathrm{df}=n-1)$ critical value
-    where a per-arm $n$ is defined (the SD reading) and at the normal $z$ for the
-    $n$-free readings; the delta method is a linearisation check that stays finite
-    even when the exact set is unbounded; the parametric bootstrap draws
-    scaled-Beta arms on $[0,100]$. \textbf{Every reading straddles the
-    $2.8\times$ acceptable line}; under the most conventional (SD) reading the set
-    is bounded and also excludes the $5\times$ significant-risk line. Endpoints are
+    ``$\pm 13\%$'' dispersion under the three conventional readings considered.
+    The SD rows enumerate all nine ordered arm-size combinations allowed by the
+    reported 8--10 participants per arm and use Welch--Satterthwaite degrees of
+    freedom; the $n$-free rows use a normal critical value. The participant-level
+    bootstrap is not identified for the $n$-free readings. \textbf{Every row
+    straddles the $2.8\times$ acceptable line}; under the SD reading the set is
+    bounded and excludes the $5\times$ significant-risk line. Endpoints are
     given to one decimal because propagating the card's integer-rounded inputs
     shifts each by $0.1$--$0.4\times$, so only the binary straddle verdict is
     rounding-robust. Under the standard-error reading the control mean sits just
     below significance at 95\% ($25/13 \approx 1.92 < 1.96$), so the Fieller set is
     then \emph{unbounded above} and the finite delta interval is a linearisation
-    artifact; this prong is conditional on that reading and on the inputs' rounding
-    (a control mean of $25.5$ or a dispersion of $12.7$ would bound it), whereas the
-    straddle holds at every corner.}
+    artifact. On the whole real line that Fieller set is
+    $(-\infty,-131.2]\cup[1.05,\infty)$; the table displays $[1.05,\infty)$ only
+    after intersecting with the substantively justified nonnegative-ratio
+    parameter space.}
     \label{tab:uplift}
 \end{table}
 """
@@ -149,7 +153,7 @@ def build_uplift_table():
 
 
 # --------------------------------------------------------------------------- #
-# Table 2: the nine audited rows.
+# Table 2: the ten model-level audited rows.
 # --------------------------------------------------------------------------- #
 _MODEL_ORDER = None  # keep CSV order
 
@@ -171,31 +175,32 @@ def build_audit_table(census_id_map=None):
     body = []
     for r in rows:
         cd = r["critical_deff"]
-        icc = r["critical_icc"]
         if r["assumed_m"] == "":
-            cd_str = f"{cd} (single-task)" if cd else "---"
+            cd_str = "n/a"
         elif cd:
-            cd_str = f"{cd} ({icc}@{r['assumed_m']})"
+            cd_str = (
+                f"{cd} ({r['critical_icc_m5']}/"
+                f"{r['critical_icc_m10']}/{r['critical_icc_m20']})"
+            )
         else:
             cd_str = "---"
         # +/-1-count sensitivity marker
         pm1 = r"\checkmark" if r["count_sensitive"] == "1" else "---"
-        # convention tier marker for SWE-bench
-        tier = r"$\dagger$" if r.get("convention_sensitive") == "1" else ""
         eval_name = {
             "swebench_hard": "SWE-bench hard",
             "metr_dedup": "METR dedup",
             "bioweapons_knowledge": "Bioweapons knowl.",
         }.get(r["capability"], r["capability"])
         # Cross-reference the row's ID in the full census (Table 4).
-        cid = census_id_map.get((r["capability"], r["model"]))
+        cid = r.get("record_id") or census_id_map.get((r["capability"], r["model"]))
         if cid:
             eval_name = f"{eval_name} ({cid})"
-        ci = f"{float(r['ci_low']):.2f}--{float(r['ci_high']):.2f}"
+        ci = f"{float(r['directional_low']):.2f}--{float(r['directional_high']):.2f}"
+        two_sided = "unresolved" if r["unresolved_two_sided"] == "1" else "resolved"
         body.append(
             f"        {eval_name} & {latex_escape(r['model'])} & {r['n']} & "
             f"{float(r['score']):.2f} & {ci} & {float(r['threshold']):.2f} & "
-            f"{_verdict_short(r['verdict'])}{tier} & {r['required_n']} & "
+            f"{_verdict_short(r['verdict'])} & {two_sided} & {r['required_n']} & "
             f"{float(r['prob_above']):.3f} & {pm1} & {cd_str} \\\\"
         )
 
@@ -204,26 +209,27 @@ def build_audit_table(census_id_map=None):
     \centering
     \scriptsize
     \resizebox{\textwidth}{!}{%
-    \begin{tabular}{llccccllcccl}
+    \begin{tabular}{llcccclllccl}
         \toprule
-        eval & model & $n$ & $\hat p$ & 95\% CI & $\tau$ & verdict & $n_{\mathrm{req}}$ & $P(p>\tau)$ & $\pm$1 & crit.\ DEFF (ICC@$m$) \\
+        eval & model & $n$ & $\hat p$ & one-sided 95\% bounds & $\tau$ & primary verdict & two-sided & $n_{\mathrm{req}}$ & $P(p>\tau)$ & $\pm$1 & crit.\ DEFF (ICC@$m=5/10/20$) \\
         \midrule
 """ + "\n".join(body) + r"""
         \bottomrule
     \end{tabular}%
     }
-    \caption{Bernoulli audit of the nine rows reporting an integer pass count
-    against a numeric threshold on that proportion. Five of nine cannot resolve their
-    threshold at 95\% (Wilson); robustness of this count to the interval
-    construction and confidence level is reported in \Cref{app:robustness}.
-    The Beta-Binomial posterior $P(p>\tau)$ agrees with the Wilson
-    verdict on every row. \textbf{$\pm$1} flags a verdict that flips if the
-    reconstructed pass count moves by one (Wilson, 95\%). Verdicts marked $\dagger$ are
-    convention-dependent: they cannot resolve under the task-generalisation $n$
-    but resolve below under the run-generalisation convention
-    ($n = \text{tasks}\times10$ runs); the task-level estimand is our headline (\Cref{app:robustness}).
-    Critical DEFF is the smallest design effect at which the interval begins to
-    straddle; the parenthesised ICC is its translation at cluster size $m$. The
+    \caption{Conditional IID-Bernoulli audit of ten model-level results. The
+    deployment-aligned primary rule uses the one-sided 95\% Wilson bound in the
+    observed direction. Two of six direct-count rows are unresolved. For the four
+    SWE-bench rows, two are unresolved under the task-level convention shown and
+    one under the run-level sensitivity ($n=\text{tasks}\times10$). The central
+    two-sided 95\% sensitivity leaves five of ten task-level rows unresolved (three
+    of ten if the SWE rows use run-level denominators). $P(p>\tau)$ is the
+    Beta posterior probability under a uniform prior. \textbf{$\pm$1} flags a
+    primary verdict that flips if a reconstructed count moves by one.
+    Critical DEFF is the smallest design effect at which the directional bounds begin to
+    straddle; parenthesised values translate it to ICC at $m=5,10,20$. ``n/a''
+    marks METR repeated-run rows, for which item clustering is inapplicable (not
+    evidence of independence). The
     code after each eval name (e.g.\ ``(A5)'') is that row's ID in the full
     census, \Cref{tab:census}, where these rows are shaded.}
     \label{tab:audit}
@@ -234,96 +240,47 @@ def build_audit_table(census_id_map=None):
 
 
 # --------------------------------------------------------------------------- #
-# Census: parse the markdown pipe tables, emit longtable + exact-count macros.
+# Census: explicit record coding -> longtable, macros, and sensitivity table.
 # --------------------------------------------------------------------------- #
-FRAMEWORK_OF_HEADER = [
-    ("Anthropic (RSP", "Anthropic-RSP"),
-    ("OpenAI (Preparedness", "OpenAI-PF"),
-    ("Google DeepMind (FSF", "GDM-FSF"),
-    ("Third-party", "3rd-party"),
-    ("OpenAI GPT-5.5", "OpenAI-PF"),
-    ("OpenAI GPT-5.6", "OpenAI-PF"),
-    ("Anthropic Opus 4.5", "Anthropic-RSP"),
-    ("Google DeepMind Gemini 3", "GDM-FSF"),
-]
-
-
-def _framework_for(header: str):
-    for needle, fw in FRAMEWORK_OF_HEADER:
-        if needle in header:
-            return fw
-    return None
-
-
-def _has_uncertainty(ci_cell: str) -> bool:
-    c = ci_cell.strip().lower()
-    if c in ("none", "n/a", "none (figure)", ""):
-        return False
-    if "no ci" in c:
-        return False
-    return ("±" in ci_cell) or ("ci" in c) or ("credible" in c) or (
-        "bootstrap" in c) or ("error bar" in c) or ("margin" in c)
-
-
-def _is_proper_interval(ci_cell: str) -> bool:
-    """A usable interval (CI / credible / bootstrap / error bar), as opposed to a
-    bare, unlabelled '± x%' dispersion."""
-    c = ci_cell.strip().lower()
-    if "no ci" in c:
-        return False
-    return ("ci" in c) or ("credible" in c) or ("bootstrap" in c) or ("error bar" in c)
-
-
 def parse_census():
-    lines = CENSUS_MD.read_text().splitlines()
-    generation = "primary"
-    framework = None
-    parsed = []  # dicts: generation, framework, domain, model, threshold, n, score, ci, direction, citation
-    for line in lines:
-        if line.startswith("# Post-2025 generation"):
-            generation = "post2025"
-            continue
-        if line.startswith("## "):
-            framework = _framework_for(line[3:])
-            continue
-        if not line.startswith("|"):
-            continue
-        cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        if len(cells) != 8:
-            continue
-        if cells[0].lower() in ("domain", ":---", "---") or set(cells[0]) <= {"-", ":", " "}:
-            continue
-        if all(set(c) <= {"-", ":", " "} for c in cells):
-            continue  # separator row
-        domain, model, threshold, n, score, ci, direction, citation = cells
-        if framework is None:
-            continue
+    """Read explicit eligibility and coding fields from the canonical CSV."""
+    parsed = []
+    for row in csv.DictReader(CENSUS_CSV.open()):
         parsed.append({
-            "generation": generation, "framework": framework,
-            "domain": domain, "model": model, "threshold": threshold,
-            "n": n, "score": score, "ci": ci, "direction": direction,
-            "citation": citation,
+            "row_id": row["record_id"],
+            "generation": row["generation"],
+            "framework": row["framework"],
+            "domain": row["domain"],
+            "model": row["model"],
+            "threshold": row["threshold_text"],
+            "n": row["n_text"],
+            "n_status": row["n_status"],
+            "score": row["score_text"],
+            "ci": row["uncertainty_text"],
+            "uncertainty_class": row["uncertainty_class"],
+            "direction": row["direction"],
+            "citation": row["citation"],
+            "source_id": row["source_id"],
+            "include_primary": row["include_primary"].lower() == "true",
+            "exclusion_reason": row["exclusion_reason"],
         })
     return parsed
 
 
 # --------------------------------------------------------------------------- #
-# Cross-reference between the census (Table 4) and the audit (Table 2). The
-# audit's nine rows are a subset of the census; we tag those census rows so
+# Cross-reference between the corpus and the model-level audit. Multiple model
+# results may map to one source record (A4), which is intentional and explicit.
+# We tag the source records and hand each audit result its stable source ID.
 # build_census can shade them and hand each a stable ID that build_audit_table
 # then prints, making the mapping between the two tables explicit.
 # --------------------------------------------------------------------------- #
-_FRAMEWORK_LETTER = {
-    "Anthropic": "A", "OpenAI": "O", "DeepMind": "D", "3rd-party": "T",
-}
-
-
 def audit_capability(row):
-    """Return the audit capability slug for a census row that is one of the nine
-    audited rows, else None. Only Anthropic rows are auditable; the domain text
+    """Return the audit capability slug for an audited corpus record.
+
+    Only Anthropic rows are auditable; the domain text
     varies (``SWE-bench Verified (hard)`` vs ``SWE-bench hard``), so match on the
     domain prefix rather than the exact string."""
-    if row["framework"] != "Anthropic-RSP":
+    if row["framework"] != "Anthropic":
         return None
     d = row["domain"]
     if d.startswith("Autonomy SWE-bench"):
@@ -344,52 +301,73 @@ def _audited_models():
 
 
 def build_census(parsed):
-    primary = [r for r in parsed if r["generation"] == "primary"]
-    post = [r for r in parsed if r["generation"] == "post2025"]
+    included = [r for r in parsed if r["include_primary"]]
+    excluded = [r for r in parsed if not r["include_primary"]]
+    post = [r for r in included if r["generation"] == "post2025"]
 
     def counts(rows):
-        # A row "reports a concrete sample size" iff its n cell contains a
-        # digit; the only n-absent pattern in the census is a bare "NOT REPORTED".
-        with_n = sum(1 for r in rows if re.search(r"\d", r["n"]))
-        unc = sum(1 for r in rows if _has_uncertainty(r["ci"]))
-        interval = sum(1 for r in rows if _is_proper_interval(r["ci"]))
-        bare_pm = unc - interval
-        return len(rows), with_n, len(rows) - with_n, unc, interval, bare_pm
+        score_n = sum(r["n_status"] == "score_denominator" for r in rows)
+        partial_n = sum(r["n_status"] == "partial_or_indirect" for r in rows)
+        no_n = sum(r["n_status"] == "not_reported" for r in rows)
+        interval = sum(r["uncertainty_class"] == "proper_interval" for r in rows)
+        bare_pm = sum(r["uncertainty_class"] == "bare_dispersion" for r in rows)
+        none = sum(r["uncertainty_class"] == "none" for r in rows)
+        return {
+            "total": len(rows), "with_n": score_n + partial_n,
+            "score_n": score_n, "partial_n": partial_n, "no_n": no_n,
+            "uncertainty": interval + bare_pm, "interval": interval,
+            "bare_pm": bare_pm, "none": none,
+        }
 
-    # Headline macros are computed over the FULL census (primary + post-2025),
-    # so the paper's census covers the whole record through the June 2026 cards.
-    # \CensusPostRows retains the post-2025 sub-count for the trend narrative.
-    p_total, p_n, p_non, p_unc, p_int, p_pm = counts(parsed)
+    primary_counts = counts(included)
+    screened_counts = counts(parsed)
 
     macros = rf"""% GENERATED by scripts/make_tables.py -- exact census counts.
-\newcommand{{\CensusTotal}}{{{p_total}}}
-\newcommand{{\CensusWithN}}{{{p_n}}}
-\newcommand{{\CensusNoN}}{{{p_non}}}
-\newcommand{{\CensusUncertainty}}{{{p_unc}}}
-\newcommand{{\CensusNoUncertainty}}{{{p_total - p_unc}}}
-\newcommand{{\CensusInterval}}{{{p_int}}}
-\newcommand{{\CensusBarePm}}{{{p_pm}}}
+\newcommand{{\CensusScreened}}{{{screened_counts['total']}}}
+\newcommand{{\CensusExcluded}}{{{len(excluded)}}}
+\newcommand{{\CensusTotal}}{{{primary_counts['total']}}}
+\newcommand{{\CensusWithN}}{{{primary_counts['with_n']}}}
+\newcommand{{\CensusScoreN}}{{{primary_counts['score_n']}}}
+\newcommand{{\CensusPartialN}}{{{primary_counts['partial_n']}}}
+\newcommand{{\CensusNoN}}{{{primary_counts['no_n']}}}
+\newcommand{{\CensusUncertainty}}{{{primary_counts['uncertainty']}}}
+\newcommand{{\CensusNoUncertainty}}{{{primary_counts['none']}}}
+\newcommand{{\CensusInterval}}{{{primary_counts['interval']}}}
+\newcommand{{\CensusBarePm}}{{{primary_counts['bare_pm']}}}
 \newcommand{{\CensusPostRows}}{{{len(post)}}}
+\newcommand{{\LegacyCensusTotal}}{{{screened_counts['total']}}}
+\newcommand{{\LegacyCensusWithN}}{{{screened_counts['with_n']}}}
+\newcommand{{\LegacyCensusNoUncertainty}}{{{screened_counts['none']}}}
 """
     (TABLES / "census_counts.tex").write_text(macros)
 
-    # Longtable of the FULL census (primary generation, then post-2025 rows in
-    # file order, grouped by the existing framework column).
-    header_map = {
-        "Anthropic-RSP": "Anthropic", "OpenAI-PF": "OpenAI",
-        "GDM-FSF": "DeepMind", "3rd-party": "3rd-party",
-    }
+    sensitivity = rf"""% GENERATED by scripts/make_tables.py -- do not edit by hand.
+\begin{{table}}[t]
+    \centering
+    \small
+    \begin{{tabular}}{{lrrrrrr}}
+        \toprule
+        coding & records & score $n$ & partial $n$ & no $n$ & any uncertainty & proper interval \\
+        \midrule
+        Primary eligible corpus & {primary_counts['total']} & {primary_counts['score_n']} & {primary_counts['partial_n']} & {primary_counts['no_n']} & {primary_counts['uncertainty']} & {primary_counts['interval']} \\
+        All screened records & {screened_counts['total']} & {screened_counts['score_n']} & {screened_counts['partial_n']} & {screened_counts['no_n']} & {screened_counts['uncertainty']} & {screened_counts['interval']} \\
+        \bottomrule
+    \end{{tabular}}
+    \caption{{Corpus-coding sensitivity. The primary corpus excludes T7 (a benchmark description with no evaluated-model result) and A32 (explicitly not used for the RSP determination). ``score $n$'' is a denominator tied to the displayed score; ``partial $n$'' is numerical sample information that does not identify that denominator. Including both screened-but-ineligible records changes the record count but not the number reporting uncertainty.}}
+    \label{{tab:census-sensitivity}}
+\end{{table}}
+"""
+    (TABLES / "census_sensitivity.tex").write_text(sensitivity)
+
+    # Longtable of the primary eligible corpus in stable-ID order.
     audited = _audited_models()
-    counters = {}      # framework letter -> running count
     id_map = {}        # (capability, model) -> census row ID, for the audit table
     body = []
-    for r in parsed:
-        display_fw = header_map.get(r["framework"], r["framework"])
-        letter = _FRAMEWORK_LETTER.get(display_fw, "X")
-        counters[letter] = counters.get(letter, 0) + 1
-        row_id = f"{letter}{counters[letter]}"
+    for r in included:
+        display_fw = r["framework"]
+        row_id = r["row_id"]
 
-        # Is this one of the nine audited rows? Match capability + model, where a
+        # Is this one of the audited source records? Match capability + model, where a
         # census cell can bundle models ("Opus 4 / Sonnet 4"); tag the row and
         # register the ID under each audited model it covers.
         cap = audit_capability(r)
@@ -416,15 +394,22 @@ def build_census(parsed):
             ]) + r" \\"
         )
 
+    excluded_body = "\n".join(
+        "  " + " & ".join([
+            r["row_id"], latex_escape(r["framework"]), latex_escape(r["domain"]),
+            latex_escape(r["model"]), latex_escape(r["exclusion_reason"]),
+        ]) + r" \\" for r in excluded
+    )
+
     tex = r"""% GENERATED by scripts/make_tables.py -- do not edit by hand.
 \begin{small}
 \begin{longtable}{p{0.7cm}p{1.4cm}p{2.4cm}p{1.5cm}p{2.2cm}p{1.2cm}p{1.7cm}p{1.5cm}p{1.9cm}}
-\caption{Full census of governance-relevant evaluation rows, spanning the
+\caption{Primary structured corpus of source-reported dangerous-capability evaluation records, spanning the
 Claude~4 / Gemini~2.5 / GPT-4.x generation through the GPT-5.6~Preview card of
-June 2026, parsed from \texttt{data/raw/census\_full.md}. ``uncert.'' reproduces
+June 2026, parsed from \texttt{data/raw/census\_records.csv}. ``uncert.'' reproduces
 the source's uncertainty cell verbatim; most rows report none. Each row carries
 an ID (framework letter + running number); \colorbox{auditrow}{shaded} rows are
-the nine audited in \Cref{sec:audit}, and their IDs appear beside the eval names
+audited in \Cref{sec:audit}, and their IDs appear beside the eval names
 in \Cref{tab:audit}.}
 \label{tab:census}\\
 \toprule
@@ -443,11 +428,23 @@ ID & framework & domain & model & threshold & $n$ & score & uncert. & citation \
 """ + "\n".join(body) + r"""
 \end{longtable}
 \end{small}
+\paragraph{Screened but excluded records.}
+\begin{center}
+\begin{small}
+\begin{tabular}{llllp{6.2cm}}
+\toprule
+ID & framework & domain & model & exclusion reason \\
+\midrule
+""" + excluded_body + r"""
+\bottomrule
+\end{tabular}
+\end{small}
+\end{center}
 """
     (TABLES / "census.tex").write_text(tex)
     return {
-        "total": p_total, "with_n": p_n, "no_n": p_non,
-        "uncertainty": p_unc, "interval": p_int, "bare_pm": p_pm,
+        **primary_counts, "screened": screened_counts["total"],
+        "excluded": len(excluded),
         "post_rows": len(post), "id_map": id_map,
     }
 
@@ -461,9 +458,9 @@ def main():
     na = build_audit_table(cinfo["id_map"])
     print(f"uplift.tex: {nu} reading-rows")
     print(f"audit.tex:  {na} rows")
-    print(f"census.tex: {cinfo['total']} rows (full census; "
-          f"{cinfo['post_rows']} from the post-2025 generation)")
-    print(f"census counts (full): total={cinfo['total']}, "
+    print(f"census.tex: {cinfo['total']} included rows ({cinfo['excluded']} excluded; "
+          f"{cinfo['post_rows']} included from the post-2025 generation)")
+    print(f"census counts (primary): total={cinfo['total']}, "
           f"with n={cinfo['with_n']}, no n={cinfo['no_n']}, "
           f"any uncertainty={cinfo['uncertainty']} "
           f"(proper interval={cinfo['interval']}, bare ±={cinfo['bare_pm']})")

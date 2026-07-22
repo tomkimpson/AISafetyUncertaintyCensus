@@ -13,8 +13,10 @@ from evalaudit import (
     match_scaled_beta,
     bootstrap_ratio_ci,
     proportion_ci,
+    proportion_directional_bounds,
     cluster_robust_se,
     clustered_ci,
+    clustered_directional_bounds,
     critical_deff,
     design_effect,
     effective_n,
@@ -55,7 +57,13 @@ def test_clopper_pearson_wider_than_wilson():
 def test_straddles():
     assert straddles(0.5, (0.4, 0.6))
     assert not straddles(0.5, (0.51, 0.6))
-    assert not straddles(0.5, (0.5, 0.6))  # boundary is not "inside"
+    assert straddles(0.5, (0.5, 0.6))  # equality does not establish a side
+
+
+def test_directional_bounds_are_central_90_percent_endpoints():
+    directional = proportion_directional_bounds(42, 100, alpha=0.05)
+    central_90 = proportion_ci(42, 100, alpha=0.10)
+    assert directional == pytest.approx(central_90)
 
 
 # ---------------------------------------------------------------- clustering
@@ -119,8 +127,10 @@ def test_critical_deff_flip_is_real():
     score, n, thr = 10 / 42, 42, 0.5
     cd = critical_deff(score, n, thr)
     assert cd is not None and cd > 1.0
-    assert straddles(thr, clustered_ci(score, n, cd))
-    assert not straddles(thr, clustered_ci(score, n, max(1.0, cd - 0.05)))
+    assert straddles(thr, clustered_directional_bounds(score, n, cd))
+    assert not straddles(
+        thr, clustered_directional_bounds(score, n, max(1.0, cd - 0.05))
+    )
 
 
 def test_critical_deff_monotone_in_gap():
@@ -135,11 +145,11 @@ def test_critical_icc_translation():
 
 
 def test_critical_deff_bioweapons_row():
-    # Claude 3.7 bio row: 18/33 vs the 0.818 rule-out line. Resolved below the
-    # line naively; pinned flip point guards the pipeline against regression.
-    cd = critical_deff(18 / 33, 33, 0.818)
+    # Bioweapons row: 17/33 vs the 27/33 rule-out line. The primary one-sided
+    # bound is resolved below naively; pin its clustering flip point.
+    cd = critical_deff(17 / 33, 33, 0.818)
     assert cd is not None and 1.0 < cd <= 33
-    assert cd == pytest.approx(4.29, abs=0.05)
+    assert cd == pytest.approx(7.52, abs=0.05)
 
 
 # ---------------------------------------------------------------- power
@@ -233,15 +243,17 @@ def test_fieller_bounded_agrees_with_delta_when_denominator_precise():
 
 
 def test_fieller_unbounded_under_se_reading():
-    # THE headline degenerate case: control mean 25 with SE 13 is not significant
-    # at 95% (25/13 = 1.92 < 1.96), so g > 1 and the Fieller set is unbounded
-    # above -- it a fortiori straddles the 2.8x line.
+    # The whole-real-line set is two rays. Intersecting with the substantively
+    # justified nonnegative-ratio space yields the displayed positive ray.
     f = fieller_ci(63.0, 13.0, 25.0, 13.0, alpha=0.05)
-    assert f.kind == "unbounded_above"
+    assert f.kind == "disjoint"
     assert f.g > 1.0
-    assert math.isinf(f.high)
-    assert f.low == pytest.approx(1.05, abs=0.03)
     assert f.straddles(2.8) and f.straddles(5.0)
+    assert f.components[0][1] == pytest.approx(-131.18, abs=0.1)
+    positive = f.restrict_nonnegative()
+    assert positive.kind == "unbounded_above"
+    assert math.isinf(positive.high)
+    assert positive.low == pytest.approx(1.05, abs=0.03)
 
 
 def test_fieller_sd_reading_straddles_but_bounded():

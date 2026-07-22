@@ -3,7 +3,7 @@
     from evalaudit import audit
     r = audit(score=0.42, n=100, threshold=0.50)
     print(r.verdict)          # e.g. "CANNOT RESOLVE"
-    print(r.ci)               # frequentist confidence interval
+    print(r.directional_bounds)  # one-sided 95% lower/upper bounds
     print(r.prob_above)       # posterior P(capability > threshold)
     print(r.required_n)       # trials needed to resolve the observed gap
 
@@ -16,7 +16,7 @@ from __future__ import annotations
 from dataclasses import dataclass, asdict, field
 from typing import Optional
 
-from .intervals import proportion_ci, straddles
+from .intervals import proportion_ci, proportion_directional_bounds, straddles
 from .bayes import prob_above, credible_interval
 from .power import power_vs_threshold, required_n
 from .clustered import cluster_robust_se, effective_n
@@ -31,10 +31,13 @@ class AuditResult:
     threshold: float
     direction: str
     alpha: float
-    # frequentist
-    ci: tuple
+    # frequentist: the directional bounds are primary; the central interval is
+    # retained as a pre-specified sensitivity analysis.
+    directional_bounds: tuple
+    two_sided_ci: tuple
     ci_method: str
-    straddles_threshold: bool
+    unresolved_directional: bool
+    unresolved_two_sided: bool
     # effective sample size after clustering (falls back to n)
     effective_n: float
     # power / sizing
@@ -49,6 +52,16 @@ class AuditResult:
 
     def as_dict(self):
         return asdict(self)
+
+    @property
+    def ci(self):
+        """Backward-compatible alias for the primary directional bounds."""
+        return self.directional_bounds
+
+    @property
+    def straddles_threshold(self):
+        """Backward-compatible alias for the primary unresolved indicator."""
+        return self.unresolved_directional
 
 
 def _resolve_counts(successes, n, score):
@@ -85,7 +98,9 @@ def audit(
     successes, score : int or float
         Provide exactly one: raw successes, or the reported accuracy/score.
     alpha : float
-        1 - confidence level for the frequentist CI and test.
+        Significance level for the primary one-sided test. The reported lower
+        and upper bounds each have coverage ``1 - alpha``. A central
+        ``1 - alpha`` interval is also returned as a sensitivity analysis.
     direction : {"above", "below"}
         "above": danger means exceeding the threshold (the usual case).
         "below": the threshold is a floor the model must clear.
@@ -121,8 +136,12 @@ def audit(
 
     successes, score = _resolve_counts(successes, n, score)
 
-    ci = proportion_ci(successes, n, alpha=alpha, method=ci_method)
-    strad = straddles(threshold, ci)
+    directional_bounds = proportion_directional_bounds(
+        successes, n, alpha=alpha, method=ci_method
+    )
+    two_sided_ci = proportion_ci(successes, n, alpha=alpha, method=ci_method)
+    unresolved_directional = straddles(threshold, directional_bounds)
+    unresolved_two_sided = straddles(threshold, two_sided_ci)
 
     # Power of the deployment test if the truth equals the observed score.
     power_obs = power_vs_threshold(n, threshold, score, alpha, direction, "normal")
@@ -136,10 +155,11 @@ def audit(
     cred = credible_interval(successes, n, alpha=alpha, prior=prior)
 
     # Verdict.
-    if strad:
+    if unresolved_directional:
         verdict = "CANNOT RESOLVE"
         notes.append(
-            f"the {int((1-alpha)*100)}% CI {ci[0]:.3f}–{ci[1]:.3f} contains the "
+            f"the one-sided {int((1-alpha)*100)}% directional bounds "
+            f"{directional_bounds[0]:.3f}–{directional_bounds[1]:.3f} contain the "
             f"threshold {threshold:.3f}: the eval does not distinguish safe from "
             f"dangerous at this confidence."
         )
@@ -164,9 +184,11 @@ def audit(
         threshold=threshold,
         direction=direction,
         alpha=alpha,
-        ci=ci,
+        directional_bounds=directional_bounds,
+        two_sided_ci=two_sided_ci,
         ci_method=ci_method,
-        straddles_threshold=strad,
+        unresolved_directional=unresolved_directional,
+        unresolved_two_sided=unresolved_two_sided,
         effective_n=n_eff,
         power_at_observed=power_obs,
         required_n=req_n,

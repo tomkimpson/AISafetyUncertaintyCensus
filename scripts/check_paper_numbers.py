@@ -1,16 +1,5 @@
 #!/usr/bin/env python
-"""Guard: the numbers hand-transcribed into paper/main.tex must match the derived CSVs.
-
-Three derived files (verdict_grid.csv, coverage_sim.csv, and the +/-1 sensitivity in
-audited.csv) are produced by the pipeline but not \\input into the manuscript; their
-results reach the paper as prose that a human typed. This script recomputes the load-bearing
-figures from the CSVs and checks that (a) they still hold the value the prose encodes and
-(b) the corresponding string is present in main.tex. It fails (exit 1) on any drift, so CI
-catches a CSV/paper divergence instead of a reader catching it post-publication.
-
-Usage:
-    python scripts/check_paper_numbers.py
-"""
+"""Fail if load-bearing derived results drift from paper/main.tex."""
 
 from __future__ import annotations
 
@@ -24,75 +13,136 @@ MAIN = ROOT / "paper" / "main.tex"
 
 
 def load(name):
-    return list(csv.DictReader((DERIVED / name).open()))
+    with (DERIVED / name).open() as f:
+        return list(csv.DictReader(f))
 
 
 def main():
     tex = MAIN.read_text()
-    checks = []  # (label, ok, detail)
+    checks = []
 
-    def check(label, computed, expected, fragment):
-        ok_val = computed == expected
-        ok_tex = fragment in tex
-        checks.append((label, ok_val and ok_tex,
-                       f"csv={computed!r} expected={expected!r} "
-                       f"value_ok={ok_val} tex_fragment_present={ok_tex}"))
+    def check(label, condition, fragment):
+        checks.append((label, bool(condition) and fragment in tex, f"fragment={fragment!r}"))
 
-    # --- verdict_grid.csv: the "N of 9 cannot resolve" invariance grid ---
-    grid = {(r["method"], r["alpha"]): int(r["n_cannot_resolve"]) for r in load("verdict_grid.csv")}
-    counts = list(grid.values())
-    check("wilson@95% cannot-resolve == 5", grid[("wilson", "0.05")], 5,
-          "count is\nfive under Wilson" if "count is\nfive under Wilson" in tex
-          else "five under Wilson")
-    check("agresti_coull@95% == 5", grid[("agresti_coull", "0.05")], 5, "Agresti--Coull")
-    check("betabinomial@95% == 5", grid[("betabinomial", "0.05")], 5, "Beta-Binomial posterior at 95")
-    check("clopper-pearson(beta)@95% == 6", grid[("beta", "0.05")], 6,
-          "six\nunder the more conservative Clopper--Pearson"
-          if "six\nunder the more conservative Clopper--Pearson" in tex
-          else "more conservative Clopper--Pearson")
-    check("grid minimum (90%) == 4", min(counts), 4, "four (at 90")
-    check("grid maximum (99%) == 6", max(counts), 6, "six\n(at 99" if "six\n(at 99" in tex else "(at 99")
+    audited = load("audited.csv")
+    direct = [r for r in audited if r["capability"] != "swebench_hard"]
+    swe = [r for r in audited if r["capability"] == "swebench_hard"]
+    check("ten model-level audit rows", len(audited) == 10, "Ten model-level")
+    check(
+        "primary direct tier 2/6",
+        sum(int(r["unresolved_primary"]) for r in direct) == 2 and len(direct) == 6,
+        "two of six direct-count",
+    )
+    check(
+        "primary SWE task tier 2/4",
+        sum(int(r["unresolved_primary"]) for r in swe) == 2 and len(swe) == 4,
+        "two of four",
+    )
+    check(
+        "primary SWE run tier 1/4",
+        sum(int(r["unresolved_runs"]) for r in swe) == 1,
+        "one of four",
+    )
+    check(
+        "two-sided task sensitivity 5/10",
+        sum(int(r["unresolved_two_sided"]) for r in audited) == 5,
+        "five of ten",
+    )
+    check(
+        "two-sided mixed run sensitivity 3/10",
+        sum(int(r["unresolved_two_sided"]) for r in direct)
+        + sum(int(r["unresolved_two_sided_runs"]) for r in swe)
+        == 3,
+        "three of ten",
+    )
+    check(
+        "one count-sensitive row",
+        sum(int(r["count_sensitive"]) for r in audited) == 1,
+        "only for\nSWE-bench Sonnet~4",
+    )
 
-    # --- audited.csv: +/-1-count sensitivity ---
-    aud = load("audited.csv")
-    n_sensitive = sum(1 for r in aud if r["count_sensitive"] == "1")
-    n_total = len(aud)
-    check("count-sensitive rows == 2", n_sensitive, 2, "two near-boundary rows are sensitive")
-    check("rows unchanged under +/-1 == 7", n_total - n_sensitive, 7, "seven of nine unchanged")
+    grid = {
+        (r["analysis"], r["method"], r["alpha"]): int(r["n_cannot_resolve"])
+        for r in load("verdict_grid.csv")
+    }
+    check(
+        "one-sided Wilson 95 is 4/10",
+        grid[("one_sided", "wilson", "0.05")] == 4,
+        "four of ten task-level rows unresolved",
+    )
+    check(
+        "two-sided Wilson 95 is 5/10",
+        grid[("two_sided", "wilson", "0.05")] == 5,
+        "central two-sided 95",
+    )
+    check(
+        "two-sided exact 95 is 6/10",
+        grid[("two_sided", "beta", "0.05")] == 6,
+        "six under\nClopper--Pearson",
+    )
 
-    # --- coverage_sim.csv: coverage bands cited in the robustness appendix ---
-    cov = load("coverage_sim.csv")
+    uplift = load("uplift_readings.csv")
+    fieller = [r for r in uplift if r["method"] in {"fieller_t", "fieller_z"}]
+    sd_fieller = [r for r in fieller if r["reading"] == "SD"]
+    check(
+        "all nine SD arm combinations present",
+        len(sd_fieller) == 9
+        and {(r["n_control"], r["n_treat"]) for r in sd_fieller}
+        == {(str(i), str(j)) for i in (8, 9, 10) for j in (8, 9, 10)},
+        "every ordered $(n_C,n_T)",
+    )
+    check(
+        "all Fieller sets retain 2.8x",
+        len(fieller) == 11 and all(r["straddles_2.8x"] == "True" for r in fieller),
+        "every reading considered retains $2.8\\times$",
+    )
+    se_row = next(r for r in fieller if r["reading"] == "SE")
+    check(
+        "SE real-line Fieller set is disjoint",
+        "-131.18" in se_row["real_set"] and "-inf" in se_row["real_set"],
+        "$(-\\infty,-131.18]\\cup[1.05,\\infty)$",
+    )
 
-    def band(dgp, crit, cols):
-        vals = []
-        for r in cov:
-            if r["kind"] == "coverage" and r["dgp"] == dgp and r["crit"] == crit:
-                vals += [float(r[c]) for c in cols if r[c] not in ("", "n/a")]
-        return (min(vals), max(vals)) if vals else (None, None)
+    corpus = list(csv.DictReader((ROOT / "data/raw/census_records.csv").open()))
+    included = [r for r in corpus if r["include_primary"].lower() == "true"]
+    check("corpus primary n=96", len(included) == 96, "\\CensusTotal{} eligible")
+    check(
+        "corpus no-uncertainty n=81",
+        sum(r["uncertainty_class"] == "none" for r in included) == 81,
+        "\\CensusNoUncertainty{} records give none",
+    )
+    signoff = list(
+        csv.DictReader((ROOT / "data/verification/human_signoff.csv").open())
+    )
+    check(
+        "human sign-off sheet covers eligible IDs and remains pending",
+        {r["record_id"] for r in signoff} == {r["record_id"] for r in included}
+        and len(signoff) == len(included)
+        and all(r["human_status"] == "pending" for r in signoff),
+        "sheet remains marked ``pending''",
+    )
 
-    # The prose is explicitly approximate ("≈") and cites three endpoints, so we
-    # pin those specific cited figures rather than the full multi-regime range:
-    #   beta+t reaches near-nominal ≈0.96 (top of the "0.95–0.96" claim),
-    #   two_point+t degrades to ≈0.84 (bottom of the "0.84–0.90" claim),
-    #   beta+z under-covers at ≈0.91.
-    beta_t = band("beta", "t", ["delta_coverage", "fieller_coverage"])
-    tp_t = band("two_point", "t", ["fieller_coverage", "delta_coverage"])
-    beta_z = band("beta", "z", ["fieller_coverage", "delta_coverage"])
-    check("beta+t near-nominal top ≈0.96", 0.955 <= beta_t[1] <= 0.965, True,
-          "0.95}--$0.96" if "0.95}--$0.96" in tex else "nominal, not conservative")
-    check("two_point+t degraded floor ≈0.84", 0.84 <= tp_t[0] <= 0.855, True,
-          "0.84}--$0.90" if "0.84}--$0.90" in tex else "lowers Fieller coverage")
-    check("beta+z under-covers ≈0.91", beta_z[0] <= 0.91 <= beta_z[1], True, "0.91")
+    coverage = load("coverage_sim.csv")
+    sd_beta_t = [
+        r for r in coverage
+        if r["kind"] == "coverage" and r["reading"] == "SD"
+        and r["dgp"] == "beta" and r["crit"] == "t"
+    ]
+    values = [float(r["fieller_coverage"]) for r in sd_beta_t]
+    check(
+        "Welch SD smooth-beta Fieller coverage around 0.94",
+        min(values) >= 0.93 and max(values) <= 0.95,
+        "approximately\n$0.94$",
+    )
 
-    # --- report ---
-    failed = [c for c in checks if not c[1]]
+    failed = [item for item in checks if not item[1]]
     for label, ok, detail in checks:
-        print(f"[{'OK' if ok else 'FAIL'}] {label}  ({detail})")
+        print(f"[{'OK' if ok else 'FAIL'}] {label} ({detail})")
     print(f"\n{len(checks) - len(failed)}/{len(checks)} checks passed.")
     if failed:
-        print("DRIFT: paper/main.tex disagrees with derived CSVs for the checks above.")
+        print("DRIFT: paper/main.tex disagrees with derived data.")
         sys.exit(1)
-    print("All hand-transcribed paper numbers match the derived data.")
+    print("All load-bearing paper numbers match the derived data.")
 
 
 if __name__ == "__main__":

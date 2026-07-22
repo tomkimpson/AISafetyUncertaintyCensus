@@ -7,10 +7,11 @@ of that threshold, and how many trials it would take to do so.
 Public entry point: :func:`evalaudit.audit.audit`.
 """
 
-from .intervals import proportion_ci, bootstrap_ci
+from .intervals import proportion_ci, proportion_directional_bounds, bootstrap_ci
 from .clustered import (
     cluster_robust_se,
     clustered_ci,
+    clustered_directional_bounds,
     critical_deff,
     design_effect,
     effective_n,
@@ -33,9 +34,11 @@ from .audit import audit, AuditResult
 
 __all__ = [
     "proportion_ci",
+    "proportion_directional_bounds",
     "bootstrap_ci",
     "cluster_robust_se",
     "clustered_ci",
+    "clustered_directional_bounds",
     "critical_deff",
     "design_effect",
     "effective_n",

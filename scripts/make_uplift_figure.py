@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 """Companion figure for the bio-uplift case study: the uplift-ratio interval
-against the acceptable-risk line, under every admissible reading of ``±13%``.
+against the acceptable-risk line, under the three readings considered of ``±13%``.
 
-The headline proportion figure (``scripts/make_figure.py``) covers the nine
+The headline proportion figure (``scripts/make_figure.py``) covers the ten
 proportion-audit rows but not the uplift trial, whose score is a ratio of means.
-This puts the paper's central case in front of the reader: a forest plot of the
+This puts the paper's case study in front of the reader: a forest plot of the
 Fieller 95% set for each reading of the card's unlabelled ``±13%`` against the
 2.8x acceptable line and the 5x significant-risk line. Every reading straddles
 2.8x; the SD reading (the most conventional) is bounded and also excludes 5x;
-the SE reading is unbounded above (conditional on that reading), drawn with an
-arrow. Reads data/derived/uplift_readings.csv (from uplift_analysis.py) and
+the SE reading is unbounded above after the stated nonnegative-ratio restriction,
+drawn with an arrow. Reads data/derived/uplift_readings.csv (from uplift_analysis.py) and
 writes paper/figures/uplift_straddle.{pdf,png}.
 """
 
@@ -41,12 +41,12 @@ POINT = 2.53       # card's reported uplift (unrounded means)
 XMAX = 6.2         # right edge of the ratio axis
 
 # Rows top-to-bottom: lead with the robust, bounded SD reading; the SE reading
-# (unbounded) sits last as the extreme end of the envelope. Each entry selects
-# the headline Fieller method for that reading.
+# (unbounded after restriction) sits last. The table reports all nine ordered
+# SD arm-size combinations; the figure shows three equal-arm representatives.
 ROWS = [
-    ("SD", "8", "fieller_t", "SD reading, $n=8$"),
-    ("SD", "9", "fieller_t", "SD reading, $n=9$"),
-    ("SD", "10", "fieller_t", "SD reading, $n=10$"),
+    ("SD", "8/8", "fieller_t", "SD reading, $n_C/n_T=8/8$"),
+    ("SD", "9/9", "fieller_t", "SD reading, $n_C/n_T=9/9$"),
+    ("SD", "10/10", "fieller_t", "SD reading, $n_C/n_T=10/10$"),
     ("CI half-width", "n-free", "fieller_z", "CI-half-width reading"),
     ("SE", "n-free", "fieller_z", "SE reading"),
 ]
@@ -108,7 +108,7 @@ def main():
                 XMAX - 0.35, y, 0.33, 0, width=0.0, head_width=0.20,
                 head_length=0.18, length_includes_head=True, color=VERMILION,
                 zorder=3))
-            ax.text(XMAX, y + 0.28, r"unbounded above", ha="right", va="bottom",
+            ax.text(XMAX, y + 0.28, r"unbounded above ($r\geq0$)", ha="right", va="bottom",
                     fontsize=6.8, color=VERMILION, style="italic")
         # point estimate (open marker, matching the "cannot resolve" style)
         ax.plot(POINT, y, marker="o", ms=6, zorder=4, markerfacecolor="white",

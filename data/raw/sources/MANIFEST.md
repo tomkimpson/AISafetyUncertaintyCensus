@@ -23,7 +23,7 @@ All URLs below were resolved and fingerprinted on **2026-07-10** (retrieval date
 tables are the census-construction retrieval; `checked` in the provenance CSV is the
 re-verification date).
 
-## Audited generation (the nine machine-auditable rows depend on these)
+## Audited generation (ten model-level results mapped to nine source records depend on these)
 
 | document | url | retrieved | sha-256 (PDF) |
 |---|---|---|---|

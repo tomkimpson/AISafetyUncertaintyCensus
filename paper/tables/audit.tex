@@ -3,34 +3,36 @@
     \centering
     \scriptsize
     \resizebox{\textwidth}{!}{%
-    \begin{tabular}{llccccllcccl}
+    \begin{tabular}{llcccclllccl}
         \toprule
-        eval & model & $n$ & $\hat p$ & 95\% CI & $\tau$ & verdict & $n_{\mathrm{req}}$ & $P(p>\tau)$ & $\pm$1 & crit.\ DEFF (ICC@$m$) \\
+        eval & model & $n$ & $\hat p$ & one-sided 95\% bounds & $\tau$ & primary verdict & two-sided & $n_{\mathrm{req}}$ & $P(p>\tau)$ & $\pm$1 & crit.\ DEFF (ICC@$m=5/10/20$) \\
         \midrule
-        SWE-bench hard (A28) & Opus 4.5 & 45 & 0.47 & 0.33--0.61 & 0.50 & \textbf{CANNOT RESOLVE} & 2430 & 0.329 & --- & 1.0 (0.0@10) \\
-        SWE-bench hard (A12) & Opus 4 & 42 & 0.40 & 0.27--0.56 & 0.50 & \textbf{CANNOT RESOLVE}$\dagger$ & 293 & 0.111 & --- & 1.0 (0.0@10) \\
-        SWE-bench hard (A13) & Sonnet 4 & 42 & 0.36 & 0.23--0.51 & 0.50 & \textbf{CANNOT RESOLVE}$\dagger$ & 128 & 0.033 & \checkmark & 1.0 (0.0@10) \\
-        SWE-bench hard (A14) & Claude 3.7 & 42 & 0.24 & 0.13--0.39 & 0.50 & resolved below & 34 & 0.000 & --- & 3.0 (0.222@10) \\
-        METR dedup (A15) & Opus 4 & 46 & 0.33 & 0.21--0.47 & 0.20 & resolved above & 129 & 0.983 & \checkmark & 1.19 (single-task) \\
-        METR dedup (A16) & Sonnet 4 & 29 & 0.28 & 0.15--0.46 & 0.20 & \textbf{CANNOT RESOLVE} & 338 & 0.871 & --- & 1.0 (single-task) \\
-        METR dedup (A17) & Claude 3.7 & 30 & 0.13 & 0.05--0.30 & 0.20 & \textbf{CANNOT RESOLVE} & 334 & 0.229 & --- & 1.0 (single-task) \\
-        Bioweapons knowl. (A4) & Opus 4 & 33 & 0.52 & 0.35--0.68 & 0.82 & resolved below & 24 & 0.000 & --- & 5.3 (>1@5) \\
-        Bioweapons knowl. (A5) & Claude 3.7 & 33 & 0.52 & 0.35--0.68 & 0.82 & resolved below & 24 & 0.000 & --- & 5.3 (>1@5) \\
+        SWE-bench hard (A28) & Opus 4.5 & 45 & 0.47 & 0.35--0.59 & 0.50 & \textbf{CANNOT RESOLVE} & unresolved & 2430 & 0.329 & --- & 1.0 (0.0/0.0/0.0) \\
+        SWE-bench hard (A12) & Opus 4 & 42 & 0.40 & 0.29--0.53 & 0.50 & \textbf{CANNOT RESOLVE} & unresolved & 293 & 0.111 & --- & 1.0 (0.0/0.0/0.0) \\
+        SWE-bench hard (A13) & Sonnet 4 & 42 & 0.36 & 0.25--0.48 & 0.50 & resolved below & unresolved & 128 & 0.033 & \checkmark & 1.27 (0.068/0.03/0.014) \\
+        SWE-bench hard (A14) & Claude 3.7 & 42 & 0.24 & 0.15--0.36 & 0.50 & resolved below & resolved & 34 & 0.000 & --- & 4.26 (0.815/0.362/0.172) \\
+        METR dedup (A15) & Opus 4 & 46 & 0.33 & 0.22--0.45 & 0.20 & resolved above & resolved & 129 & 0.983 & --- & n/a \\
+        METR dedup (A16) & Sonnet 4 & 29 & 0.28 & 0.16--0.43 & 0.20 & \textbf{CANNOT RESOLVE} & unresolved & 338 & 0.871 & --- & n/a \\
+        METR dedup (A17) & Claude 3.7 & 30 & 0.13 & 0.06--0.27 & 0.20 & \textbf{CANNOT RESOLVE} & unresolved & 334 & 0.229 & --- & n/a \\
+        Bioweapons knowl. (A4) & Opus 4 & 33 & 0.52 & 0.38--0.65 & 0.82 & resolved below & resolved & 24 & 0.000 & --- & 7.52 (>1/0.724/0.343) \\
+        Bioweapons knowl. (A4) & Sonnet 4 & 33 & 0.52 & 0.38--0.65 & 0.82 & resolved below & resolved & 24 & 0.000 & --- & 7.52 (>1/0.724/0.343) \\
+        Bioweapons knowl. (A5) & Claude 3.7 & 33 & 0.52 & 0.38--0.65 & 0.82 & resolved below & resolved & 24 & 0.000 & --- & 7.52 (>1/0.724/0.343) \\
         \bottomrule
     \end{tabular}%
     }
-    \caption{Bernoulli audit of the nine rows reporting an integer pass count
-    against a numeric threshold on that proportion. Five of nine cannot resolve their
-    threshold at 95\% (Wilson); robustness of this count to the interval
-    construction and confidence level is reported in \Cref{app:robustness}.
-    The Beta-Binomial posterior $P(p>\tau)$ agrees with the Wilson
-    verdict on every row. \textbf{$\pm$1} flags a verdict that flips if the
-    reconstructed pass count moves by one (Wilson, 95\%). Verdicts marked $\dagger$ are
-    convention-dependent: they cannot resolve under the task-generalisation $n$
-    but resolve below under the run-generalisation convention
-    ($n = \text{tasks}\times10$ runs); the task-level estimand is our headline (\Cref{app:robustness}).
-    Critical DEFF is the smallest design effect at which the interval begins to
-    straddle; the parenthesised ICC is its translation at cluster size $m$. The
+    \caption{Conditional IID-Bernoulli audit of ten model-level results. The
+    deployment-aligned primary rule uses the one-sided 95\% Wilson bound in the
+    observed direction. Two of six direct-count rows are unresolved. For the four
+    SWE-bench rows, two are unresolved under the task-level convention shown and
+    one under the run-level sensitivity ($n=\text{tasks}\times10$). The central
+    two-sided 95\% sensitivity leaves five of ten task-level rows unresolved (three
+    of ten if the SWE rows use run-level denominators). $P(p>\tau)$ is the
+    Beta posterior probability under a uniform prior. \textbf{$\pm$1} flags a
+    primary verdict that flips if a reconstructed count moves by one.
+    Critical DEFF is the smallest design effect at which the directional bounds begin to
+    straddle; parenthesised values translate it to ICC at $m=5,10,20$. ``n/a''
+    marks METR repeated-run rows, for which item clustering is inapplicable (not
+    evidence of independence). The
     code after each eval name (e.g.\ ``(A5)'') is that row's ID in the full
     census, \Cref{tab:census}, where these rows are shaded.}
     \label{tab:audit}

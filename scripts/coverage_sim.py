@@ -8,9 +8,9 @@ n = 8-10, where CLT-based intervals are known to misbehave (Bowyer 2025). This
 script measures that behaviour directly, and it does so honestly about the two
 modelling choices that move the answer:
 
-  1. The critical value. The headline table reports the small-sample
-     t(df = n-1) interval, so we calibrate THAT interval: every interval below
-     is built with ``df = n-1``, not a normal z. (Under a z critical value the
+  1. The critical value. The headline table reports a small-sample Welch-t
+     interval, so every simulated replicate derives Welch--Satterthwaite df
+     from its two estimated arm-mean variances. (Under a z critical value the
      same intervals under-cover by ~0.03; near-nominal coverage is therefore a
      property of the t construction, not a free lunch.)
 
@@ -96,7 +96,7 @@ def simulate(mc, mt, participant_sd, n, dgp, truth, use_t=True):
     """Coverage of ``truth`` and the false-safe rate for a two-arm ratio.
 
     Arms are drawn from ``dgp`` matched to means (mc, mt) and SD ``participant_sd``
-    at size n. Intervals use the small-sample t(df = n-1) critical value when
+    at size n. Intervals use replicate-specific Welch--Satterthwaite df when
     ``use_t`` (the interval the paper reports), else the normal z -- reported side
     by side so the z-vs-t sensitivity is explicit. Returns coverage and
     P(interval entirely below truth) for delta and Fieller, plus the
@@ -108,7 +108,6 @@ def simulate(mc, mt, participant_sd, n, dgp, truth, use_t=True):
     if treat is None or control is None:
         return None
 
-    df = (n - 1) if use_t else None
     cover = {"delta": 0, "fieller": 0}
     below = {"delta": 0, "fieller": 0}
     unbounded_fieller = 0
@@ -120,6 +119,14 @@ def simulate(mc, mt, participant_sd, n, dgp, truth, use_t=True):
             continue
         used += 1
         set_, sec = arm_se(t), arm_se(c)
+        if use_t:
+            df_denominator = set_**4 / (n - 1) + sec**4 / (n - 1)
+            df = (
+                (set_**2 + sec**2) ** 2 / df_denominator
+                if df_denominator > 0 else None
+            )
+        else:
+            df = None
 
         _, dlo, dhi = delta_log_ratio_ci(mt_i, set_, mc_i, sec, alpha=0.05, df=df)
         if dlo <= truth <= dhi:
@@ -127,12 +134,13 @@ def simulate(mc, mt, participant_sd, n, dgp, truth, use_t=True):
         if dhi < truth:
             below["delta"] += 1
 
-        f = fieller_ci(mt_i, set_, mc_i, sec, alpha=0.05, df=df)
+        f_real = fieller_ci(mt_i, set_, mc_i, sec, alpha=0.05, df=df)
+        f = f_real.restrict_nonnegative()
         if f.kind != "bounded":
             unbounded_fieller += 1
-        if f.low <= truth <= f.high:
+        if f.straddles(truth):
             cover["fieller"] += 1
-        if f.kind == "bounded" and f.high < truth:
+        if f.components and all(high < truth for _, high in f.components):
             below["fieller"] += 1
 
     return {
@@ -146,7 +154,7 @@ def simulate(mc, mt, participant_sd, n, dgp, truth, use_t=True):
 
 def main():
     rows = []
-    print(f"Ratio-of-means interval behaviour, t(df=n-1) intervals, "
+    print(f"Ratio-of-means interval behaviour, Welch-t intervals, "
           f"{N_REPLICATES} replicates, arms on [0,{SUPPORT:.0f}]\n")
 
     # ---- Calibration: coverage of the true generating ratio (2.52x). ------- #
@@ -224,7 +232,9 @@ def main():
 
     OUTFILE.parent.mkdir(parents=True, exist_ok=True)
     with OUTFILE.open("w", newline="") as fh:
-        writer = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
+        writer = csv.DictWriter(
+            fh, fieldnames=list(rows[0].keys()), lineterminator="\n"
+        )
         writer.writeheader()
         writer.writerows(rows)
     print(f"\nNominal coverage is 0.95. wrote {OUTFILE}")
