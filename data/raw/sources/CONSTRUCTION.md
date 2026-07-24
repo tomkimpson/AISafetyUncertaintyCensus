@@ -7,10 +7,15 @@ AI-assisted research pass that is not bit-reproducible.
 ## Sampling frame and cutoff
 
 The fixed frame is the 26 version-pinned public documents in `MANIFEST.md`, retrieved and
-screened through 30 June 2026. They cover Anthropic RSP system cards, OpenAI Preparedness
-system cards, Google DeepMind FSF reports, and public METR, UK AISI, and Apollo reports.
-This is purposive coverage of the listed framework families, not an exhaustive population of
-all dangerous-capability evaluations.
+screened through 30 June 2026. Twenty-two are result documents screened for candidate
+records. Twenty-one contribute at least one primary-eligible record; the HCAST paper
+contributes only excluded benchmark-description record T7. The other four documents
+(Anthropic's RSP, the Gemini 3 Pro model card, the RAND uplift study, and the Epoch
+commentary) supply framework, threshold, or comparison context rather than census
+candidate records. The frame covers Anthropic RSP system cards, OpenAI Preparedness system
+cards, Google DeepMind FSF reports, and public METR, UK AISI, and Apollo reports. This is
+purposive coverage of the listed framework families, not an exhaustive population of all
+dangerous-capability evaluations.
 
 The screen produced 98 candidate records. The primary corpus contains 96 eligible records.
 Two remain in the canonical file with `include_primary=false` and an explicit reason:
@@ -61,11 +66,12 @@ The initial extraction and later recoding were AI-assisted and had no fixed prom
 so corpus construction is not procedurally reproducible. The repository instead provides:
 
 1. version-pinned sources in `MANIFEST.md`;
-2. stable record IDs and source locators in `census_records.csv`;
-3. claim-fidelity notes in `data/verification/cell_audit.csv`; and
-4. a submission gate in `data/verification/human_signoff.csv`.
+2. stable record IDs and source locators in `census_records.csv`; and
+3. claim-fidelity notes in `data/verification/cell_audit.csv`.
 
-The sign-off sheet deliberately remains `pending` until the author verifies each eligible
-record. Exact corpus fractions should not be represented as human-verified before that gate
-is complete. The downstream statistical analysis is separately reproducible with fixed
-seeds via `make all`.
+The cell-audit cross-check is AI-assisted (performed independently of the original
+extraction), not human sign-off; corpus fractions should be read on that basis. The
+submission-stage protocol requires two independent human coders plus adjudication and is
+documented in `docs/HUMAN_VALIDATION_PROTOCOL.md`; its templates remain explicitly
+`pending` until that work occurs. The downstream statistical analysis is separately
+reproducible with fixed seeds via `make all`.

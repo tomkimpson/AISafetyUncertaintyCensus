@@ -74,24 +74,29 @@ Correspondence: \texttt{tom.kimpson@unimelb.edu.au}}
 
 \begin{abstract}
 
-Frontier AI governance often compares dangerous-capability scores with declared
-thresholds. A deterministic rule on one fixed benchmark needs no sampling inference; but
-when the score is used as evidence about reruns, new tasks, latent capability, or deployment
-performance, external audit requires a stated estimand, quantified uncertainty, and a
-decision rule. We assemble a structured corpus of \CensusTotal{} eligible, source-reported
-evaluation records from 26 public documents. \CensusNoUncertainty{} records report no
-uncertainty, \CensusBarePm{} give only an unlabelled ``$\pm$'' dispersion, and
-\CensusInterval{} give a proper interval. We then analyse ten model-level threshold
-comparisons under explicit IID-Bernoulli working models. With a deployment-aligned one-sided
-95\% Wilson rule, two of six direct-count results are unresolved. For four SWE-bench results,
-two are unresolved when tasks are the sampling unit and one when task-runs are; the public
-aggregates do not identify which variance model should govern. As a separate case study,
-all nine allowed arm-size combinations and all three conventional readings considered for
-the Opus~4 bio-uplift trial's unlabelled dispersion retain its $2.53\times$ estimate across
-the $2.8\times$ supplementary acceptable-risk line. These conditional reconstructions do
-not adjudicate the developers' decisions. They show that the published record often lacks
-the information needed to verify how evidence maps to action. We recommend reporting the
-estimand, uncertainty interval, and decision rule for every thresholded result.
+Public frontier-AI frameworks increasingly connect dangerous-capability evaluations to
+governance thresholds, but the auditability of the statistical link from score to decision
+is unclear. We assemble a fixed, purposive corpus of \CensusTotal{}
+governance-relevant records from \CensusSourceDocs{} result documents within a
+26-document frame spanning Anthropic, OpenAI, Google DeepMind, and third-party evaluators.
+At record level, \CensusNoUncertainty{}/\CensusTotal{} report no uncertainty; at document
+level, \CensusSourceNoUncertainty{}/\CensusSourceDocs{} report none for any eligible
+record. Only \CensusInterval{} records, from \CensusSourceInterval{} documents, give a
+proper statistical interval. For the ten model-level results that pair a recoverable
+integer count with an operative numerical threshold, all from Anthropic, we reconstruct
+conditional IID-Bernoulli comparisons. Using separate one-sided 95\% Wilson claims, the six
+direct-count results classify as three below demonstrated, two indeterminate, and one above
+demonstrated; four SWE-bench results classify as two/two/zero at task level and
+three/one/zero under a run-level sensitivity. These directional claims are each controlled
+at $\alpha=0.05$ and do not constitute one simultaneous 95\% classification. A separate
+case illustration shows that the Opus~4 bio-uplift trial's reported $2.53\times$ ratio
+straddles its nonbinding $2.8\times$ supplementary line under every conventional reading
+considered for the card's unlabelled dispersion. The contribution is an empirical,
+cross-framework audit of public reporting and a reconstructable threshold-decision layer,
+not a finding that the underlying governance actions were wrong. We recommend that every
+thresholded result state its estimand, uncertainty, and decision rule; conformity-assessment
+standards provide a useful model for this decision layer, without implying that AI
+evaluations already possess the traceability of physical metrology.
 \end{abstract}
 
 
@@ -101,10 +106,15 @@ estimand, uncertainty interval, and decision rule for every thresholded result.
 
 \section{Introduction}
 
-The increasing capabilities of frontier AI models have led many labs to publish safety frameworks. Some examples include Anthropic's Responsible Scaling
+Frontier AI developers publish safety frameworks including Anthropic's Responsible Scaling
 Policy (RSP) \citep{anthropic2026rsp}, OpenAI's Preparedness Framework
 \citep{openai2025preparedness}, and Google DeepMind's Frontier Safety Framework
-\citep{deepmind2025fsf}. These frameworks evaluate the dangerous capabilities of a model to decide whether it is safe to deploy. The standard procedure is as follows: an evaluation produces a score, the score is compared against a declared threshold, and the comparison between score and threshold decides whether a model is in some dangerous regime. For example, an evaluation might measure the uplift in a user's ability to cause harm with and without using AI (say in some biosafety-related domain; \citealp{fmf2025biosafety}); a model is classified as safe if the uplift is less than some threshold (``the uplift was 2\% relative to a threshold of 5\% so the model is safe'').
+\citep{deepmind2025fsf}. These frameworks use dangerous-capability evaluations as one input
+to mitigation and deployment decisions. Some comparisons are deterministic policy rules on
+a fixed benchmark; others are offered as evidence about reruns, new tasks, latent
+capability, or deployment performance. The distinction matters. A fixed-benchmark crossing
+can be computed without a sampling model, whereas a claim beyond the observed items requires
+an estimand and an account of uncertainty.
 
 When an evaluation score is used to infer performance beyond the observed benchmark or
 trials, its statistical uncertainty matters. This conditional distinction is increasingly
@@ -112,7 +122,13 @@ recognised in work treating model evaluations as scientific experiments
 \citep{miller2024adding,madaan2024quantifying,heineman2025signal,bowyer2025position,raman2025intolerable}.
 
 
-However, while the importance of a statistical approach to model evaluations is clear, the extent to which published evaluations adhere to one is not. Statistical claims require a stated sample size, a stated uncertainty on the score, and a threshold that is sufficiently precise and quantitative to compare against. It is not known whether published frontier safety results currently meet those requirements, and accordingly how far the corresponding safety claims can be trusted. For example, if the statistical uncertainty on the score is large relative to the difference between the score and the threshold, the evaluation cannot meaningfully separate ``safe'' from ``dangerous''. Concretely, we are interested in the question \emph{can published model evaluations statistically distinguish ``safe'' from ``dangerous'' with the confidence that a deployment decision requires?}
+The empirical question is whether public frontier-safety reports expose enough information
+to audit that inferential step: a denominator tied to the score, a labelled uncertainty
+quantity, an operative numerical threshold, and a decision rule stating how uncertainty
+affects the call. If an uncertainty bound reaches the threshold, the data do not demonstrate
+the corresponding side of the line under that model. This is a narrower claim than calling
+a model ``safe'' or ``dangerous'': a governance action can be precautionary and reasonable
+even when the public report does not make its statistical rationale reconstructable.
 
 Making this precise requires naming the estimand. A score--threshold comparison becomes a
 statistical test only after specifying the source of randomness and target population. Our
@@ -125,8 +141,37 @@ assumptions. Where policy is defined directly on a fixed empirical benchmark, no
 uncertainty is required merely to check whether that policy rule was crossed, although
 generalisation beyond the observed benchmark remains a separate question.
 
-We address this question by auditing the published record of AI safety frameworks. We compile a structured corpus of \CensusTotal{} governance-relevant evaluation records spanning the safety frameworks of Anthropic, OpenAI, and Google DeepMind, together with results from third-party evaluators (METR, UK~AISI, Apollo). For each result we ask: is a sample size reported, is the score's
-uncertainty stated, and is the threshold even quantitative? Where possible, we reconstruct the omitted uncertainty on the score and test whether the score and threshold can be statistically separated. Numerous previous works have performed reviews of AI safety frameworks. \cite{stelling2025evaluating} assess 12 frameworks against governance criteria, finding them under-specified. \cite{tong2026foresight} similarly publish an AI safety benchmark based on governance criteria. \cite{fli2025index} also publish a comprehensive AI safety index. \cite{bommasani2023fmti} evaluate the transparency of frontier models. What no prior work does is ask whether the published evaluations used in frontier safety have the statistical resolving power to support the distinction between ``safe'' and ``unsafe'' that is claimed. The closest ancestor to this work is \citet{miller2024adding}, who argues that evaluation scores should carry error bars; we build on this by first investigating which published safety evaluations actually report those error bars, and second, whether the safe-versus-dangerous conclusions drawn from them still hold once the error bars are taken into account.
+This question is timely because evaluation disclosure is becoming part of governance, not
+only voluntary scientific practice. California's Transparency in Frontier Artificial
+Intelligence Act requires covered developers to publish frontier-AI frameworks and summaries
+of catastrophic-risk assessments and results \citep{california2025sb53}. The EU General-
+Purpose AI Code of Practice offers a voluntary route for signatories to demonstrate
+compliance with AI Act transparency and safety-and-security obligations
+\citep{europeancommission2025gpaicode}. Neither instrument by itself answers how uncertainty
+should enter a threshold decision, but both increase the value of a checkable reporting
+layer.
+
+\paragraph{Relationship to prior work and contribution.}
+The novelty is deliberately narrower than ``bringing statistics to AI evaluation.''
+\citet{miller2024adding} develops error bars and power analysis for language-model
+evaluations; \citet{keller2026nist} distinguishes fixed-benchmark from generalised accuracy
+and uses mixed models to estimate the latter. STREAM (ChemBio) proposes a 28-criterion
+dangerous-capability reporting standard, including uncertainty, evaluation counts, and the
+connection from evidence to conclusions \citep{mccaslin2025stream}. Evaluation Cards
+provides a general reporting schema and large-scale monitoring layer
+\citep{ghosh2026evaluationcards}. Reviews and indices separately compare frontier-safety
+frameworks and transparency practices
+\citep{stelling2025evaluating,tong2026foresight,fli2025index,bommasani2023fmti}.
+
+Against that background, this paper contributes three linked but bounded pieces. First, it
+codes uncertainty reporting at both record and source-document levels in a version-pinned,
+cross-framework corpus. Second, it identifies the small public subset for which an operative
+threshold comparison is reconstructable and reports direction-specific decision classes
+under explicit working estimands and sensitivities. Third, it connects those empirical
+findings to the narrower conformity-assessment question: what decision rule and guard band
+would make a threshold statement externally checkable? The corpus is purposive and the
+reconstructable subset is Anthropic-only, so the paper does not estimate an industry-wide
+rate or rank developers by statistical quality.
 
 
 This paper is organised as follows. \Cref{sec:census} presents the structured corpus. \Cref{sec:audit} gives conditional reconstructions for a model-level subset, \Cref{sec:uplift} considers the Opus~4 human bio-uplift trial, and \Cref{sec:discussion} presents implications and recommendations.
@@ -136,14 +181,17 @@ This paper is organised as follows. \Cref{sec:census} presents the structured co
 \section{Structured corpus of governance-relevant evaluations}
 \label{sec:census}
 
-We screened the 26 version-pinned public documents in
-\texttt{data/raw/sources/MANIFEST.md}, current through 30 June 2026. They cover four
-framework families: Anthropic system cards and its RSP; OpenAI system cards and its
-Preparedness Framework; Google DeepMind's Frontier Safety Framework, evaluation paper,
-and Gemini reports \citep{phuong2024evaluating,deepmind2025gemini3}; and public reports
-from METR, UK~AISI, and Apollo. This is a fixed, purposive document frame, not a claim to
-have enumerated every safety evaluation ever published. Fractions below describe this
-corpus only.
+The fixed frame contains 26 version-pinned public documents in
+\texttt{data/raw/sources/MANIFEST.md}, current through 30 June 2026. Twenty-two are result
+documents screened for candidate records. Of those, \CensusSourceDocs{} contribute at
+least one eligible record; the remaining HCAST paper contributes only excluded benchmark-
+description record T7. Four framework or context documents support threshold definitions,
+framework descriptions, or comparisons but are not candidate-record sources. The frame
+covers Anthropic system cards and its RSP; OpenAI system cards and its Preparedness
+Framework; Google DeepMind's Frontier Safety Framework, evaluation paper, and Gemini
+reports \citep{phuong2024evaluating,deepmind2025gemini3}; and public reports from METR,
+UK~AISI, and Apollo. It is purposive coverage, not a claim to enumerate every dangerous-
+capability evaluation. Fractions below are descriptive of this fixed frame.
 
 The record unit is one source-reported table row or prose result whose score is mapped to a
 safety-relevant capability or deployment determination. We retain the source's displayed
@@ -166,9 +214,12 @@ screened coding sensitivity. Where the audit reconstructs an integer count, it u
 $k=\operatorname{round}(\hat p n)$ and reports the resulting $\pm1$ sensitivity.
 
 \input{tables/census_sensitivity.tex}
+\input{tables/reporting_levels.tex}
 
 %\paragraph{How rarely uncertainty is reported.}
-Of the \CensusTotal{} eligible records, \CensusScoreN{} report a denominator tied to the displayed score, \CensusPartialN{} report only partial or indirect sample information, and \CensusNoN{} report none. Only \CensusUncertainty{} report any kind of uncertainty on the score. The majority (\CensusNoUncertainty{}/\CensusTotal{}) are point estimates: every Gemini~2.5 critical-capability-level determination and every cybersecurity capture-the-flag (CTF) ``$X/Y$'' solve entry in the corpus carries no uncertainty, and the only uncertainty OpenAI
+Of the \CensusTotal{} eligible records, \CensusScoreN{} report a denominator tied to the displayed score, \CensusPartialN{} report only partial or indirect sample information, and \CensusNoN{} report none. Only \CensusUncertainty{} report any kind of uncertainty on the score. At the source-document level, \CensusSourceNoUncertainty{} of \CensusSourceDocs{} contributing documents report no uncertainty for any eligible record, while only \CensusSourceInterval{} report a proper interval anywhere (\Cref{tab:reporting-levels}). The record and document summaries point in the same direction, but neither is a probability-sample estimate. Record weighting also gives more influence to documents with more displayed rows: the Opus~4/Sonnet~4 card alone contributes 18 eligible records. We therefore report both denominators rather than attach a binomial confidence interval to the purposive 81/96 fraction.
+
+The majority (\CensusNoUncertainty{}/\CensusTotal{}) of records are point estimates: every Gemini~2.5 critical-capability-level determination and every cybersecurity capture-the-flag (CTF) ``$X/Y$'' solve entry in the corpus carries no uncertainty, and the only uncertainty OpenAI
 attaches to any of its cards is the ``$\pm$'' margin on the externally run UK~AISI cyber results in the GPT-5.5 card (pass@5 $=90.5\% \pm 12.9\%$), which sits against a qualitative capability tier rather than a stated line. The omission is most severe when a small sample size coincides with a governance decision that depends on the score; with few trials the sampling error is large, but no error bar is placed on the number that informs the decision. This recurs across CTF suites of 4--13 challenges, the 33-question bioweapons knowledge set, and ARC's 12 autonomous-replication tasks. Of the \CensusUncertainty{} results that do state a dispersion, only \CensusInterval{} are proper confidence or credible intervals that make an explicit probabilistic claim about where the true value lies, with a stated coverage level and interpretation --- e.g.\ ``95\% CI [0.31, 0.52]'' or ``bootstrapped 95\% CI''. The remaining \CensusBarePm{} are unlabelled ``$\pm$'' dispersions; it is not clear whether these represent a standard deviation, a standard error, a full range, or something else, and no confidence level is named.
 
 The \CensusInterval{} proper intervals cluster in a handful of sources: METR (bootstrapped 95\%
@@ -188,7 +239,7 @@ no external party can check it. A qualitative threshold does not remove the unde
 sampling noise. Instead it leaves that noise unquantified, adds a second uninspectable layer on
 top, and removes any external object against which to test the decision.
 
-\section{Bernoulli audit: can each pass rate resolve its own threshold?}
+\section{Bernoulli audit: what does each pass rate demonstrate?}
 \label{sec:audit}
 
 %Which rows are auditable
@@ -196,6 +247,13 @@ The corpus, \Cref{tab:census}, records evaluation results published by several A
 (reported, or reconstructed as in \Cref{sec:census}) and compared against a
 numeric threshold $\tau$ defined on that same proportion. Additionally, the record must use this $\{k, n, \tau\}$ tuple to make a decision. Across the frameworks in the corpus, only a small minority of results satisfy these two conditions. For example, in its production cards, DeepMind reports clean integer counts (Gemini~3~Pro solves 11 of 12 hard cyber
 challenges, 0 of 13 end-to-end, 3 of 11 situational-awareness tasks) but maps them to qualitative capability levels.\footnote{The one DeepMind row with a numeric criterion (D6) sits in its 2024 research paper, not a card, and reports a modelled success probability, not a pass count.} OpenAI does provide quantitative thresholds and sample sizes, but its published scores are typically transforms (e.g.\ a Spearman correlation, a refusal-adjusted rate) that do not let us recover $k$; when $k$ is recoverable, $\tau$ is only indicative and the verdict is qualitative, so there is no operative threshold to test $k$ against. Anthropic provides both pass counts and operative thresholds $\tau$. \Cref{tab:anatomy} summarises the auditability of different developers.
+
+The resulting auditability funnel is: \CensusTotal{} eligible source-reported records,
+\CensusScoreN{} with a denominator tied to the displayed score, and ten model-level
+comparisons satisfying the full $\{k,n,\tau,\text{operative use}\}$ rule. The last step
+changes unit rather than forming a simple record attrition rate: shared record A4 expands to
+two model-level comparisons. The funnel therefore describes what can be reconstructed, not
+the prevalence of statistically adequate evaluations.
 
 \begin{table}[t]
     \centering
@@ -240,13 +298,15 @@ with $n$ equal to tasks and a run-generalisation sensitivity with
 $n=\text{tasks}\times10$. The released aggregates cannot test any of these assumptions or
 identify the relevant variance components.
 
-The primary decision is directional. If $\hat p<\tau$, safety relative to the line is
-resolved only when the one-sided 95\% Wilson upper bound is below $\tau$; if
-$\hat p>\tau$, the corresponding lower bound must exceed $\tau$. The table displays both
-one-sided 95\% endpoints (equivalently, the endpoints of a central 90\% interval), but each
-decision uses only the bound in the observed direction. Equality is unresolved. A central
-two-sided 95\% Wilson interval is a declared sensitivity, not the primary rule. Wilson is
-used because the row sizes are small \citep{brown2001interval}; construction and confidence-
+We report a three-way directional classification. A result is \emph{below demonstrated}
+only when its one-sided 95\% Wilson upper bound is below $\tau$; it is \emph{above
+demonstrated} only when the one-sided 95\% lower bound exceeds $\tau$; otherwise it is
+\emph{indeterminate}. These are two separate level-$0.05$ claims. The table displays both
+one-sided 95\% endpoints, which equal the endpoints of a central 90\% interval, but the pair
+is not a simultaneous 95\% classification: using both directions admits up to 10\% total
+boundary error. We therefore avoid describing the union as a single ``95\% resolved''
+verdict. A central two-sided 95\% Wilson interval is a declared sensitivity. Wilson is used
+because row sizes are small \citep{brown2001interval}; interval-construction and confidence-
 level sensitivities appear in \Cref{app:robustness}.
 
 We also report the one-sided sample size $n_{\mathrm{req}}$ needed for 95\% power at the
@@ -254,7 +314,7 @@ observed gap, following \citet{miller2024adding}. Because the effect estimate is
 noisy, this is an order-of-magnitude diagnostic rather than a design prescription. Under a
 uniform prior the posterior is $\mathrm{Beta}(k+1,n-k+1)$, and $P(p>\tau)$ is its upper
 tail. Reconstructed counts are perturbed by $\pm1$. Finally, for rows where item clustering
-is meaningful, we report the design effect at which the primary verdict changes and its ICC
+is meaningful, we report the design effect at which the primary class changes and its ICC
 translation across $m\in\{5,10,20\}$. The source cards publish neither cluster labels nor
 sizes. Item clustering is inapplicable to the single-task METR rows, but their reruns can
 still share prompts, scaffolds, and infrastructure; independence remains a working
@@ -265,29 +325,31 @@ assumption.
 
 
 
-%Results, including into of figure 1
-\Cref{fig:straddle} plots the primary directional bounds. Among the six direct-count
-results, two are unresolved: the Sonnet~4 and Claude~3.7 METR rerun results. Among the four
-SWE-bench results, the task-level working model leaves Opus~4.5 and Opus~4 unresolved
-(two of four); the run-level sensitivity leaves only Opus~4.5 unresolved (one of four).
-These tiers are more informative than one pooled fraction because they expose the sampling-
-unit dependence. The central two-sided 95\% sensitivity leaves five of ten unresolved under
-task-level SWE denominators and three of ten when the SWE rows use run-level denominators.
-For scale, A28 (Opus~4.5 SWE-bench hard) has
+% Results, including introduction of Figure 1
+\Cref{fig:straddle} plots the directional bounds. The six direct-count results classify as
+three below demonstrated, two indeterminate, and one above demonstrated. The indeterminate
+rows are the Sonnet~4 and Claude~3.7 METR rerun results; the Opus~4 METR row is the only
+above-demonstrated result. The four SWE-bench results classify as two/two/zero under the
+task-level working model and three/one/zero under the run-level sensitivity. Reporting these
+tiers rather than one pooled ``resolved'' fraction exposes both direction and sampling-unit
+dependence. The central two-sided 95\% sensitivity straddles the threshold for five of ten
+rows under task-level SWE denominators and three of ten when SWE uses run-level
+denominators. For scale, A28 (Opus~4.5 SWE-bench hard) has
 $n_{\mathrm{req}}\approx2430$ tasks under the stated one-sided approximation, compared with
 45 observed tasks.
 
 
 
-The unresolved rows occur on both sides of a threshold. When a score below a concern line
-has an upper bound reaching the line, it does not demonstrate below-threshold performance.
-When a score above a line has a lower bound reaching below it, it does not demonstrate that
-the line was crossed. The governance consequence depends on the stated loss function and
-decision rule; statistical non-resolution alone does not say which action was wrong.
+Indeterminacy can occur with a point estimate on either side. A score below a concern line
+whose upper bound reaches the line does not demonstrate below-threshold performance; a score
+above the line whose lower bound reaches below it does not demonstrate that the line was
+crossed. The governance consequence depends on the loss function and decision rule:
+indeterminacy is not itself evidence that an action was wrong.
 
 
 The grey bars show the illustrative ICC$=0.2$ sensitivity at the reference cluster size.
-A positive design effect can make a resolved row unresolved, never the reverse. The last
+A positive design effect can turn a demonstrated directional claim into indeterminacy,
+never the reverse. The last
 table column avoids treating one chosen $m$ as a fact: it translates each critical design
 effect at $m=5,10,20$. For the bioweapons rows, for example, the primary critical DEFF is
 7.52; it is impossible at $m=5$ but corresponds to possible ICCs of 0.724 and 0.343 at
@@ -299,13 +361,14 @@ clustering'' is warranted.
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{ci_straddle.pdf}
-    \caption{Primary one-sided 95\% Wilson directional bounds for the ten model-level
+    \caption{Separate one-sided 95\% Wilson directional bounds for the ten model-level
     results under the stated IID working models. Each row shows the reported score (point) and its bounds
     (thick bar) against the decision threshold $\tau$ for its evaluation family (black
-    vertical line). Open orange markers mark intervals that cross the threshold;
-    these rows cannot be placed on the observed side of the line at the one-sided 95\% level. Filled
-    blue markers mark intervals that lie entirely on one side; these rows resolve the
-    comparison. Thin grey whiskers show each interval recomputed at the effective sample
+    vertical line). Filled blue circles mark below-demonstrated results, open orange circles
+    mark indeterminate results, and filled green squares mark above-demonstrated results.
+    Each directional claim is controlled at $\alpha=0.05$; the two directions together are
+    not one simultaneous 95\% classification. Thin grey whiskers show each interval
+    recomputed at the effective sample
     size under item clustering ($\mathrm{ICC}=0.2$ at the assumed cluster size,
     \Cref{sec:audit}). The METR rows are repeated trials of one task, so item clustering does not
     apply, although common-condition dependence can remain. The right-hand column gives the Beta posterior probability
@@ -316,10 +379,12 @@ clustering'' is warranted.
 
 
 
-\section{Case study: bio-uplift trial}
+\section{Case illustration: bio-uplift trial}
 \label{sec:uplift}
 
-The Opus~4 human bio-uplift trial (A1) reports a ratio of continuous-rubric arm
+The Opus~4 human bio-uplift trial (A1) is a high-consequence illustration of what
+unlabelled uncertainty prevents an outside reader from checking; it is not presented as
+representative of the corpus. The trial reports a ratio of continuous-rubric arm
 means and therefore falls outside \Cref{sec:audit}. Each arm contained 8--10 participants,
 but the card does not give the arm-specific counts. Third-party graders scored participants'
 bioweapon acquisition plans. The published control and Opus~4 means are
@@ -343,9 +408,6 @@ illustration, the upper bound first falls below that line at about 119 participa
 
 Anthropic did not read the $2.53\times$ as below the line; it concluded the result was ``sufficiently close that we are unable to rule out ASL-3'' and escalated. ``Sufficiently close'' is itself a claim about uncertainty: it concedes that the trial cannot place the score on one side of the threshold, which is what our reconstructed intervals show. It is possible that Anthropic computed such intervals internally and escalated on that basis. The card does not say. It publishes only a bare point estimate against a numeric line, so an outside reader cannot tell whether the escalation rests on a quantified analysis or on an unaided judgment call, and has no way to check where the same judgment would place the next model. The thresholds were never binding policy: the RSP's CBRN thresholds are qualitative, and the $2.8\times$/$5\times$ figures appear in the card only as supplementary working. But readers take a published number at face value, as a precise figure carrying no uncertainty, whatever its formal standing.
 
-\input{tables/uplift.tex}
-
-
 \begin{figure}[t]
     \centering
     \includegraphics[width=0.92\linewidth]{uplift_straddle.pdf}
@@ -354,7 +416,7 @@ Anthropic did not read the $2.53\times$ as below the line; it concluded the resu
     shows the reported $2.53\times$ estimate (open marker) and its confidence set against
     the $2.8\times$ acceptable line (black) and the $5\times$ significant-risk line (grey
     dashed). The standard-deviation reading (Welch $t$, shown at equal-arm $n=8,9,10$; all
-    unequal combinations appear in \Cref{tab:uplift}) gives bounded intervals within
+    unequal combinations appear in the appendix, \Cref{tab:uplift}) gives bounded intervals within
     $1.73\times$--$4.24\times$, which exclude $5\times$. The
     CI-half-width reading reaches $5\times$. The standard-error reading is unbounded
     above after restriction to nonnegative ratios; its unconstrained real-line set is
@@ -412,28 +474,47 @@ and published in another: a point against a numeric line. Because the rule conne
 the evidence to the decision is never published, an outside party cannot verify that a
 determination follows from its evidence, nor that the same rule is applied consistently
 across models and developers; a calibrated escalation and an unaided judgment call leave
-the same trace in the record. The statistical object the
-precautionary frame calls for is already in hand: the decision-theoretic reading is
-carried by the exceedance probabilities $P(p > \tau)$ reported alongside our verdicts
-(\Cref{tab:audit}); had the frameworks published risk tolerances on that object, we would
-have audited against those instead.
+the same trace in the record. A posterior exceedance probability such as
+$P(p > \tau)$ in \Cref{tab:audit} is one possible decision input, but its prior and loss
+threshold must be specified; an interval-overlap or guard-band rule is another. Had the
+frameworks published one of these rules, the audit could have evaluated that rule rather
+than supplying a generic directional comparison.
 
-% ¶5 — the remedy: a metrology for AI safety (single, full entrance of the conformity frame)
-This problem is not unique to AI safety. From the perspective of metrology, comparing a
-measured value against a specification limit to issue a pass/fail statement is a \emph{conformity statement}. Such a statement is meaningless unless it carries a stated \emph{decision rule} --- a declaration, made
-in advance, of how the measurement uncertainty enters the accept/reject call. Outside AI, such statements are governed by international standards that require a stated decision rule and guard band \citep{jcgm106_2012,iso14253_1}, and an accreditation regime makes stating the decision rule mandatory: every accredited testing laboratory must document its decision rule when it states conformity \citep{iso17025_2017,ilac_g8_2019}. The institutional half of an equivalent regime for AI has already been proposed: governance proposals call for the training, standardisation, and accreditation of third-party AI auditors \citep{raji2022outsider}, and a recent multi-institution framework sets out tiered assurance levels for audits of frontier developers \citep{brundage2026frontieraudit}. What is still missing is the metrological half --- an ISO/IEC~17025 analogue under which an accredited evaluator issuing ``below the line'' would be required to state its decision rule and uncertainty budget, as any calibration laboratory must: a metrology for AI safety.
+% ¶5 — the remedy: a bounded conformity-assessment analogy
+Conformity assessment provides a useful, bounded analogy. When a measured quantity is
+compared with a specification limit, JCGM~106 formalises how measurement uncertainty,
+decision rules, guard bands, and consumer/producer risks enter the statement
+\citep{jcgm106_2012,iso14253_1}. ISO/IEC~17025 and ILAC guidance likewise require a
+laboratory issuing a statement of conformity to document the decision rule when it is not
+inherent in the requested specification \citep{iso17025_2017,ilac_g8_2019}. The transferable
+idea is the \emph{decision layer}: predeclare how uncertainty changes a threshold call. We
+do not claim that frontier-AI evaluations are physical metrology. They generally lack a
+stable measurand, traceability chain, reference standard, and validated uncertainty budget;
+the target can also change with prompts, scaffolds, graders, and model updates. Those
+differences make the analogy a source of design principles, not proof that ISO laboratory
+accreditation can be imported wholesale. Proposals for trained and standardised third-party
+AI auditors \citep{raji2022outsider,brundage2026frontieraudit} could nevertheless adopt this
+narrow conformity-decision requirement.
 
 
 
 %reccomendations
-We make a series of recommendations that are cheap to implement. None are particularly novel; \citet{miller2024adding} already recommends reporting the sample size and the standard error beside each score. What follows restates his recommendations for the governance setting. Report sample sizes and confidence intervals for every gating evaluation. Label
+The reporting recommendations deliberately consolidate rather than displace existing
+proposals. Following \citet{miller2024adding,keller2026nist}, state the estimand, denominator,
+and uncertainty model; following STREAM and Evaluation Cards, preserve the evaluation
+context, provenance, limitations, and connection from evidence to conclusion
+\citep{mccaslin2025stream,ghosh2026evaluationcards}. For every gating result, report a
+confidence or credible interval appropriate to that estimand. Label
 uncertainty statements unambiguously as SD, SE, or CI (cf.\ the unlabelled ``$\pm 13\%$'' of \Cref{sec:uplift}). Where a threshold is quantitative, state the resolving power: the
-interval on the score, or the sample size needed to resolve the declared gap. Where
+interval on the score or a prospective sample-size calculation for a declared relevant gap,
+and predeclare whether the rule requires demonstrating below, demonstrating above, or
+escalating when indeterminate. Where
 clustering is plausible, report per-cluster counts so a design effect can be estimated
 rather than assumed. These are best adopted as a common industry standard rather than
 unilaterally: a method like ours can only scrutinise a developer that already publishes
 $\tau$, $n$, and $k$, so the least transparent labs escape entirely while the most
-transparent absorb the scrutiny. None of this
+transparent absorb the scrutiny. The Anthropic-only reconstructable subset in this paper is
+therefore an auditability finding, not a league table. None of this
 is beyond reach. Newer cards already report more of it (GPT-5.5 publishes sample sizes and
 cyber margins; Anthropic's RSP has been revised repeatedly
 \citep{openai2026gpt55,anthropic2026rsp}), and the 157-participant RAND uplift trial
@@ -445,54 +526,72 @@ cyber margins; Anthropic's RSP has been revised repeatedly
 \label{sec:limitations}
 
 Several limitations bound this audit. First, the 26-document sampling frame is purposive,
-not exhaustive, and the record unit follows source display granularity; corpus fractions are
-descriptive of these documents only. Second, extraction, recoding, and cell cross-checking
-were AI-assisted. The repository includes locators, pinned sources, explicit coding fields,
-and a row-level human sign-off sheet, but that sheet remains marked ``pending'' at this
-draft stage. The exact corpus fractions must therefore pass the documented author sign-off
-gate before submission. Third, the ten model-level audit results come from one developer and
-do not support a cross-developer resolving-power comparison. Fourth, the public aggregates
+not exhaustive, and the record unit follows source display granularity. The 81/96
+record-weighted fraction is therefore descriptive, not a prevalence estimate; the
+\CensusSourceNoUncertainty{}/\CensusSourceDocs{} source-document result is a complementary
+concentration sensitivity, not a correction that turns the frame into a probability sample.
+Second, extraction, recoding, and the current cell cross-check were AI-assisted rather than
+human-verified. The repository contains a two-coder, independent source-based validation and
+adjudication protocol plus a submission gate (\texttt{make verify-human}); at the time of
+this draft every template is explicitly pending. The paper should not be submitted as a
+validated empirical study until that gate passes and any changes are regenerated. Third,
+the ten model-level results all come from Anthropic. This shows that its public reporting
+makes some threshold claims unusually reconstructable; it cannot support a cross-developer
+resolving-power comparison or an industry-wide failure rate. Fourth, the public aggregates
 do not validate the IID assumptions, identify SWE-bench variance components, reveal cluster
-labels, separate grader variance, or label the uplift dispersion. We expose rather than
-average over those choices. Finally, $n_{\mathrm{req}}$ is calculated at a noisy observed
-effect and is a scale diagnostic, not a prospective design calculation.
+labels, separate grader variance, or label the uplift dispersion. The uplift analysis is a
+case illustration under enumerated readings, not an estimate of a general phenomenon.
+Finally, $n_{\mathrm{req}}$ uses a noisy observed effect and is a scale diagnostic, not a
+prospective design calculation. Developer factual review and right-of-reply are also
+pending under the protocol in the repository; silence, if any, will not be treated as
+agreement.
 
 
 
 \section{Conclusion}
 \label{sec:conclusion}
 
-Within the \CensusTotal{}-record eligible corpus, uncertainty reporting is uncommon:
-\CensusNoUncertainty{} records give none and only \CensusInterval{} give a proper interval.
-The conditional audit does not yield one design-invariant fraction. Under the primary
-one-sided rule, two of six direct-count results are unresolved; the four SWE-bench results
-give two unresolved at task level and one at run level. The Opus~4 uplift reconstruction
-retains the supplementary $2.8\times$ line under all three conventional dispersion readings
-considered and every allowed arm-size combination.
+The fixed public frame exposes a reporting and decision-rule gap. At record level,
+\CensusNoUncertainty{}/\CensusTotal{} eligible results report no uncertainty; at
+source-document level, \CensusSourceNoUncertainty{}/\CensusSourceDocs{} contributing
+documents report none anywhere. The ten reconstructable model-level comparisons all come
+from Anthropic and classify as five below demonstrated, four indeterminate, and one above
+demonstrated under task-level denominators; the SWE run-level sensitivity changes that total
+to six/three/one. These are separate direction-specific level-$0.05$ claims, not one 95\%
+industry classification. The bio-uplift illustration likewise shows that every conventional
+reading considered for an unlabelled dispersion retains the nonbinding $2.8\times$ line.
 
-These findings do not show that the governance actions were unreasonable. They show that
-published point estimates usually omit the information needed to distinguish a fixed-
-benchmark policy check from an inference beyond that benchmark, or to verify how uncertainty
-changes the action. The practical remedy is metrological: state the estimand and sampling
-unit, report and label the uncertainty, and connect it to a predeclared decision rule.
+None of these results establishes that a governance action was wrong. A precautionary rule
+can rationally escalate on indeterminate evidence, and a deterministic fixed-benchmark rule
+does not require a population-generalisation interval. The externally checkable claim is
+narrower: when a report generalises beyond the observed items or issues a threshold
+statement, it should state the estimand, labelled uncertainty, and decision rule. The
+conformity-assessment literature supplies a useful model for that decision layer, while the
+remaining challenges of AI measurement—construct validity, distribution shift, grader and
+scaffold effects, and traceability—remain open.
 
 \section*{Data and code availability}
 All computation is implemented in the tested \texttt{evalaudit} package,
 with the published facts held in a single data file and all modelling assumptions
 (cluster sizes, priors) held separately in the analysis scripts. The full ICC$\times m$
-sensitivity sweep is generated as a by-product of the main audit. The code and data that
-reproduce every number, table, and figure in this paper are available at
+sensitivity sweep and record/source reporting summaries are generated as by-products of the
+main audit. Independent human-validation templates, their failing-until-complete checker,
+and the developer right-of-reply protocol are included but are not represented as completed.
+The code and data that reproduce every statistical number, table, and figure in this paper
+are available at
 \url{https://github.com/tomkimpson/AISafetyUncertaintyCensus}.
 
 \textbf{Statement on AI usage:} An AI agent located documents and extracted the initial
-corpus; later recoding and cell cross-checking were also AI-assisted. The construction pass
-is not bit-reproducible. Archival auditability instead rests on the 26 pinned sources,
-stable record IDs, page/section locators, \texttt{data/verification/cell\_audit.csv}, and
-explicit coding in \texttt{data/raw/census\_records.csv}. Before submission, the author must
-complete \texttt{data/verification/human\_signoff.csv}; it is intentionally pending in this
-draft and no claim of completed human verification is made. The statistical pipeline is
-procedurally reproducible with fixed seeds and regenerates its derived data, tables, and
-figures via \texttt{make all}.
+corpus; later recoding and cell cross-checking were also AI-assisted, but performed
+independently of the original extraction and recorded one row per cell in
+\texttt{data/verification/cell\_audit.csv}. The construction pass is not bit-reproducible;
+archival auditability instead rests on the 26 pinned sources, stable record IDs,
+page/section locators, that per-cell audit trail, and explicit coding in
+\texttt{data/raw/census\_records.csv}, so any reader can re-resolve every document and
+re-check every cell against its recorded locator. The statistical pipeline is procedurally
+reproducible with fixed seeds and regenerates its derived data, tables, and figures via
+\texttt{make all}. Independent human validation remains a pre-submission requirement rather
+than an AI-completed task.
 
 \section*{Competing interests}
 The author has no lab affiliation and no financial or advisory relationship with any
@@ -538,6 +637,10 @@ the SWE-bench effective-sample-size convention, the interval-construction grid, 
 $\pm 1$ count sensitivity, the cluster-size caveat for the critical design effect, and
 the coverage and admissible readings of the uplift trial's ``$\pm 13\%$''.
 
+\input{tables/audit_sensitivity.tex}
+
+\input{tables/uplift.tex}
+
 \paragraph{The SWE-bench variance model is a task-level audit convention.}
 \Cref{sec:audit} takes the SWE-bench effective sample size to be the number of tasks
 (42 or 45), not the number of task-runs; this paragraph records why, and what changes
@@ -557,28 +660,31 @@ outcomes, so the variance components cannot be estimated and the effective-$n$ c
 should be read as a task-level audit convention rather than a demonstrably worst-case
 bound. To make the convention's leverage explicit, we recompute the SWE-bench rows under
 the opposite, run-generalisation convention ($n = \text{tasks}\times10$ runs, each
-task-run an independent Bernoulli trial). Under the primary one-sided rule, Opus~4.5 remains
-unresolved, Opus~4 changes from unresolved to resolved below, and Sonnet~4 and Claude~3.7
-are resolved below under both conventions. Thus the tier changes from two of four to one of
-four. Task level is primary because it targets generalisation to new tasks; run level instead
+task-run an independent Bernoulli trial). Under the directional rule, Opus~4.5 remains
+indeterminate, Opus~4 changes from indeterminate to below demonstrated, and Sonnet~4 and
+Claude~3.7 are below demonstrated under both conventions. Thus the
+below/indeterminate/above tier changes from 2/2/0 to 3/1/0. Task level is primary because it
+targets generalisation to new tasks; run level instead
 targets rerun performance on this task set. Neither variance component is identified by the
 public aggregate, so both counts are reported rather than declaring either unconditional.
 
 \paragraph{Interval construction and sidedness are separate sensitivities.}
-At one-sided 95\%, Wilson, Agresti--Coull, Clopper--Pearson, and the uniform-prior Beta
-posterior decision all leave four of ten task-level rows unresolved. At one-sided 99\% the
-count is six. The central two-sided analysis is more conservative: it gives five of ten at
+At separate one-sided 95\%, Wilson, Agresti--Coull, Clopper--Pearson, and the
+uniform-prior Beta posterior decision all leave four of ten task-level rows indeterminate.
+At one-sided 99\% the count is six. The central two-sided analysis is more conservative:
+it straddles the threshold for five of ten at
 95\% under Wilson, Agresti--Coull, and the Beta posterior, and six under
 Clopper--Pearson; its grid spans four at 90\% to six at 99\%. The Bayesian column in
 \Cref{tab:audit} is a Beta posterior tail probability, not a ``Beta--Binomial posterior'';
 its agreement with related interval constructions is expected and is presented as a
 sensitivity, not independent evidence. Sidedness changes the memorable count, which is why
-the directional result is primary and the two-sided result is labelled rather than pooled.
+the directional claims and central-interval sensitivity are labelled separately rather than
+pooled into a single confidence statement.
 
 \paragraph{Reconstructed-count sensitivity.}
-Perturbing every reconstructed count by $\pm1$ changes the primary verdict only for
+Perturbing every reconstructed count by $\pm1$ changes the primary class only for
 SWE-bench Sonnet~4: adding one success moves its upper directional bound back across the
-0.50 line. The other nine model-level results retain their primary verdict. This mechanical
+0.50 line. The other nine model-level results retain their primary class. This mechanical
 sensitivity does not address the more important question of whether a rounded ten-run mean
 should be represented by a task-level integer count at all; the task/run tier does.
 

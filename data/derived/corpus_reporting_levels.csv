@@ -1,0 +1,11 @@
+level,framework,total,no_uncertainty,any_uncertainty,proper_interval,bare_dispersion
+record,Overall,96,81,15,9,6
+record,Anthropic,33,28,5,1,4
+record,OpenAI,32,30,2,0,2
+record,DeepMind,21,17,4,4,0
+record,3rd-party,10,6,4,4,0
+source_document,Overall,21,13,8,5,3
+source_document,Anthropic,7,4,3,1,2
+source_document,OpenAI,5,4,1,0,1
+source_document,DeepMind,4,2,2,2,0
+source_document,3rd-party,5,3,2,2,0

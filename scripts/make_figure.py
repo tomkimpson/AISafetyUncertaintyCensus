@@ -2,13 +2,13 @@
 """The headline figure: confidence intervals against decision thresholds.
 
 A grouped forest plot. Each audited row is drawn as its reported score (point)
-with its one-sided 95% directional bounds (thick bar) against the group's decision threshold (vertical
-line); a thin grey whisker behind shows the CI widened to the effective sample
-size under item clustering (ICC=0.2 at the assumed cluster size), where
-clustering applies. Rows whose naive CI crosses the threshold cannot resolve
-it and are drawn in vermilion with an open marker (redundant encoding for
-grayscale). Reads data/derived/audited.csv (produced by run_audit.py) and
-writes paper/figures/ci_straddle.{pdf,png}.
+with separate one-sided 95% directional bounds (thick bar) against the group's
+decision threshold (vertical line); a thin grey whisker behind shows the bounds
+widened to the effective sample size under item clustering (ICC=0.2 at the
+assumed cluster size), where clustering applies. Colour and marker shape encode
+the three-way result: below demonstrated, indeterminate, or above demonstrated.
+Reads data/derived/audited.csv (produced by run_audit.py) and writes
+paper/figures/ci_straddle.{pdf,png}.
 """
 
 from __future__ import annotations
@@ -25,8 +25,9 @@ from matplotlib.lines import Line2D  # noqa: E402
 ROOT = Path(__file__).resolve().parents[1]
 
 # Okabe-Ito: distinguishable under all common forms of colour blindness.
-BLUE = "#0072B2"       # resolved
-VERMILION = "#D55E00"  # cannot resolve
+BLUE = "#0072B2"       # below demonstrated
+VERMILION = "#D55E00"  # indeterminate
+GREEN = "#009E73"      # above demonstrated
 INK = "#1a1a1a"        # threshold line, headers
 GREY = "#999999"       # clustered whisker, secondary text
 LIGHTGREY = "#c8c8c8"
@@ -87,8 +88,12 @@ def main():
         for r in grows:
             score = float(r["score"])
             lo, hi = float(r["directional_low"]), float(r["directional_high"])
-            straddle = bool(int(r["unresolved_primary"]))
-            color = VERMILION if straddle else BLUE
+            decision_class = r["decision_class"]
+            color, marker, open_marker = {
+                "BELOW DEMONSTRATED": (BLUE, "o", False),
+                "INDETERMINATE": (VERMILION, "o", True),
+                "ABOVE DEMONSTRATED": (GREEN, "s", False),
+            }[decision_class]
 
             # Clustered CI (where clustering applies) as a thin grey whisker
             # behind the naive bar.
@@ -105,8 +110,8 @@ def main():
             for x in (lo, hi):
                 ax.plot([x, x], [y - 0.18, y + 0.18], color=color, lw=1.6,
                         zorder=3)
-            ax.plot(score, y, marker="o", ms=6, zorder=4,
-                    markerfacecolor="white" if straddle else color,
+            ax.plot(score, y, marker=marker, ms=6, zorder=4,
+                    markerfacecolor="white" if open_marker else color,
                     markeredgecolor=color, markeredgewidth=1.4)
 
             ticks_y.append(y)
@@ -150,11 +155,14 @@ def main():
     legend_handles = [
         Line2D([], [], color=BLUE, lw=2.2, marker="o", ms=6,
                markerfacecolor=BLUE, markeredgecolor=BLUE,
-               label="resolved: one-sided 95% bound clears threshold"),
+               label="below demonstrated (upper 95% bound < threshold)"),
         Line2D([], [], color=VERMILION, lw=2.2, marker="o", ms=6,
                markerfacecolor="white", markeredgecolor=VERMILION,
                markeredgewidth=1.4,
-               label="cannot resolve: one-sided 95% bound reaches threshold"),
+               label="indeterminate (neither directional claim demonstrated)"),
+        Line2D([], [], color=GREEN, lw=2.2, marker="s", ms=6,
+               markerfacecolor=GREEN, markeredgecolor=GREEN,
+               label="above demonstrated (lower 95% bound > threshold)"),
         Line2D([], [], color=INK, lw=1.4, marker="|", ms=0, ls="-",
                label=r"decision threshold $\tau$"),
         Line2D([], [], color=GREY, lw=0.9,

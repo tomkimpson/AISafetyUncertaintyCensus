@@ -27,21 +27,29 @@ def main():
     audited = load("audited.csv")
     direct = [r for r in audited if r["capability"] != "swebench_hard"]
     swe = [r for r in audited if r["capability"] == "swebench_hard"]
-    check("ten model-level audit rows", len(audited) == 10, "Ten model-level")
+    check("ten model-level audit rows", len(audited) == 10, "ten model-level")
     check(
-        "primary direct tier 2/6",
-        sum(int(r["unresolved_primary"]) for r in direct) == 2 and len(direct) == 6,
-        "two of six direct-count",
+        "direct class tier 3/2/1",
+        len(direct) == 6
+        and sum(r["decision_class"] == "BELOW DEMONSTRATED" for r in direct) == 3
+        and sum(r["decision_class"] == "INDETERMINATE" for r in direct) == 2
+        and sum(r["decision_class"] == "ABOVE DEMONSTRATED" for r in direct) == 1,
+        "three below demonstrated, two indeterminate, and one above",
     )
     check(
-        "primary SWE task tier 2/4",
-        sum(int(r["unresolved_primary"]) for r in swe) == 2 and len(swe) == 4,
-        "two of four",
+        "SWE task class tier 2/2/0",
+        len(swe) == 4
+        and sum(r["decision_class"] == "BELOW DEMONSTRATED" for r in swe) == 2
+        and sum(r["decision_class"] == "INDETERMINATE" for r in swe) == 2
+        and sum(r["decision_class"] == "ABOVE DEMONSTRATED" for r in swe) == 0,
+        "two/two/zero",
     )
     check(
-        "primary SWE run tier 1/4",
-        sum(int(r["unresolved_runs"]) for r in swe) == 1,
-        "one of four",
+        "SWE run class tier 3/1/0",
+        sum(r["decision_class_runs"] == "BELOW DEMONSTRATED" for r in swe) == 3
+        and sum(r["decision_class_runs"] == "INDETERMINATE" for r in swe) == 1
+        and sum(r["decision_class_runs"] == "ABOVE DEMONSTRATED" for r in swe) == 0,
+        "three/one/zero",
     )
     check(
         "two-sided task sensitivity 5/10",
@@ -68,7 +76,7 @@ def main():
     check(
         "one-sided Wilson 95 is 4/10",
         grid[("one_sided", "wilson", "0.05")] == 4,
-        "four of ten task-level rows unresolved",
+        "four of ten task-level rows indeterminate",
     )
     check(
         "two-sided Wilson 95 is 5/10",
@@ -109,17 +117,37 @@ def main():
     check(
         "corpus no-uncertainty n=81",
         sum(r["uncertainty_class"] == "none" for r in included) == 81,
-        "\\CensusNoUncertainty{} records give none",
+        "\\CensusNoUncertainty{}/\\CensusTotal{}",
     )
-    signoff = list(
-        csv.DictReader((ROOT / "data/verification/human_signoff.csv").open())
+    reporting = {
+        (r["level"], r["framework"]): r
+        for r in load("corpus_reporting_levels.csv")
+    }
+    source_overall = reporting[("source_document", "Overall")]
+    check(
+        "21 source documents contribute eligible records",
+        int(source_overall["total"]) == 21,
+        "\\CensusSourceDocs{} contributing",
     )
     check(
-        "human sign-off sheet covers eligible IDs and remains pending",
-        {r["record_id"] for r in signoff} == {r["record_id"] for r in included}
-        and len(signoff) == len(included)
-        and all(r["human_status"] == "pending" for r in signoff),
-        "sheet remains marked ``pending''",
+        "13 source documents report no uncertainty",
+        int(source_overall["no_uncertainty"]) == 13,
+        "\\CensusSourceNoUncertainty{}/\\CensusSourceDocs{}",
+    )
+    check(
+        "five source documents report a proper interval",
+        int(source_overall["proper_interval"]) == 5,
+        "\\CensusSourceInterval{} report a proper",
+    )
+    source_rows = load("source_reporting.csv")
+    opus4_source = next(
+        r for r in source_rows
+        if r["source_id"] == "claude-opus-4-sonnet-4-system-card-may-2025"
+    )
+    check(
+        "Opus 4/Sonnet 4 card contributes 18 eligible records",
+        int(opus4_source["eligible_records"]) == 18,
+        "contributes 18 eligible records",
     )
 
     coverage = load("coverage_sim.csv")

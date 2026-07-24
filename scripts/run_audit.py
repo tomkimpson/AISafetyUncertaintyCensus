@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 """Run the model-level threshold audit and its declared sensitivities.
 
-The primary frequentist decision uses a one-sided 95% Wilson bound in the
-observed direction.  A central two-sided 95% Wilson interval, the SWE-bench
-run-level convention, reconstructed-count perturbations, and an assumption
-grid for item clustering are retained as sensitivity analyses.
+The primary frequentist result is a three-way classification supported by two
+separate one-sided 95% Wilson claims: below demonstrated, above demonstrated,
+or indeterminate. These are separately controlled at alpha=.05; their union is
+not a single 95% classification. A central two-sided 95% Wilson interval, the
+SWE-bench run-level convention, reconstructed-count perturbations, and an
+assumption grid for item clustering are retained as sensitivity analyses.
 """
 
 from __future__ import annotations
@@ -48,6 +50,14 @@ GRID_ALPHAS = [0.10, 0.05, 0.01]
 SWEBENCH_RUNS = 10
 
 
+def _decision_class(threshold, bounds):
+    if bounds[1] < threshold:
+        return "BELOW DEMONSTRATED"
+    if bounds[0] > threshold:
+        return "ABOVE DEMONSTRATED"
+    return "INDETERMINATE"
+
+
 def _bounds_at(successes, n, alpha, method):
     return (
         proportion_directional_bounds(successes, n, alpha=alpha, method=method),
@@ -78,6 +88,7 @@ def main():
     out_fields = [
         "record_id", "framework", "capability", "model", "threshold", "n",
         "successes", "score", "directional_low", "directional_high",
+        "demonstrates_below", "demonstrates_above", "decision_class",
         "unresolved_primary", "two_sided_low", "two_sided_high",
         "unresolved_two_sided", "power_at_observed", "required_n",
         "prob_above", "verdict", "is_illustrative", "source",
@@ -86,7 +97,8 @@ def main():
         "critical_icc_m5", "critical_icc_m10", "critical_icc_m20",
         "unresolved_minus1", "unresolved_plus1", "count_sensitive",
         "n_runs", "directional_low_runs", "directional_high_runs",
-        "unresolved_runs", "two_sided_low_runs", "two_sided_high_runs",
+        "decision_class_runs", "unresolved_runs",
+        "two_sided_low_runs", "two_sided_high_runs",
         "unresolved_two_sided_runs", "convention_sensitive",
         # Compatibility aliases: these are the primary directional bounds.
         "ci_low", "ci_high", "straddles",
@@ -108,18 +120,20 @@ def main():
 
         successes = result.successes
 
-        def unresolved_at(s):
+        def class_at(s):
             s = max(0, min(n, s))
             bounds = proportion_directional_bounds(
                 s, n, alpha=args.alpha, method=args.ci_method
             )
-            return straddles(threshold, bounds)
+            return _decision_class(threshold, bounds)
 
-        unresolved_minus1 = unresolved_at(successes - 1)
-        unresolved_plus1 = unresolved_at(successes + 1)
+        class_minus1 = class_at(successes - 1)
+        class_plus1 = class_at(successes + 1)
+        unresolved_minus1 = class_minus1 == "INDETERMINATE"
+        unresolved_plus1 = class_plus1 == "INDETERMINATE"
         count_sensitive = (
-            unresolved_minus1 != result.unresolved_directional
-            or unresolved_plus1 != result.unresolved_directional
+            class_minus1 != result.decision_class
+            or class_plus1 != result.decision_class
         )
 
         if row["capability"] == "swebench_hard":
@@ -128,6 +142,7 @@ def main():
             directional_runs, two_sided_runs = _bounds_at(
                 successes_runs, n_runs, args.alpha, args.ci_method
             )
+            decision_class_runs = _decision_class(threshold, directional_runs)
             unresolved_runs = straddles(threshold, directional_runs)
             unresolved_two_sided_runs = straddles(threshold, two_sided_runs)
             convention_sensitive = unresolved_runs != result.unresolved_directional
@@ -135,6 +150,7 @@ def main():
             n_runs = ""
             directional_runs = ("", "")
             two_sided_runs = ("", "")
+            decision_class_runs = ""
             unresolved_runs = ""
             unresolved_two_sided_runs = ""
             convention_sensitive = ""
@@ -167,6 +183,9 @@ def main():
             "score": round(result.score, 4),
             "directional_low": round(result.directional_bounds[0], 4),
             "directional_high": round(result.directional_bounds[1], 4),
+            "demonstrates_below": int(result.demonstrates_below),
+            "demonstrates_above": int(result.demonstrates_above),
+            "decision_class": result.decision_class,
             "unresolved_primary": int(result.unresolved_directional),
             "two_sided_low": round(result.two_sided_ci[0], 4),
             "two_sided_high": round(result.two_sided_ci[1], 4),
@@ -192,6 +211,7 @@ def main():
             "n_runs": n_runs,
             "directional_low_runs": _rounded(directional_runs[0]),
             "directional_high_runs": _rounded(directional_runs[1]),
+            "decision_class_runs": decision_class_runs,
             "unresolved_runs": _int_or_blank(unresolved_runs),
             "two_sided_low_runs": _rounded(two_sided_runs[0]),
             "two_sided_high_runs": _rounded(two_sided_runs[1]),
@@ -247,10 +267,10 @@ def main():
     swe = [r for r in out if r["capability"] == "swebench_hard"]
     print(f"Audited {len(out)} model-level rows -> {args.outfile}")
     print(
-        "Primary one-sided 95% unresolved: "
-        f"direct-count {sum(r['unresolved_primary'] for r in direct)}/{len(direct)}; "
-        f"SWE task-level {sum(r['unresolved_primary'] for r in swe)}/{len(swe)}; "
-        f"SWE run-level {sum(r['unresolved_runs'] for r in swe)}/{len(swe)}."
+        "Separate one-sided 95% claims (below / indeterminate / above): "
+        f"direct-count {_class_counts(direct)}; "
+        f"SWE task-level {_class_counts(swe)}; "
+        f"SWE run-level {_class_counts(swe, field='decision_class_runs')}."
     )
     print(
         "Two-sided 95% sensitivity unresolved: "
@@ -267,6 +287,18 @@ def _rounded(value):
 
 def _int_or_blank(value):
     return "" if value == "" else int(value)
+
+
+def _class_counts(rows, field="decision_class"):
+    counts = {
+        label: sum(r[field] == label for r in rows)
+        for label in ("BELOW DEMONSTRATED", "INDETERMINATE", "ABOVE DEMONSTRATED")
+    }
+    return (
+        f"{counts['BELOW DEMONSTRATED']}/"
+        f"{counts['INDETERMINATE']}/"
+        f"{counts['ABOVE DEMONSTRATED']}"
+    )
 
 
 def _sweep_row(row, result, n, threshold, m, icc, deff, n_eff):
