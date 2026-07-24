@@ -1,0 +1,21 @@
+record_id,capability,model,coder_id,source_checked,reported_score,reconstructed_n,reconstructed_successes,operative_threshold,mapping_notes,status
+A28,swebench_hard,Opus 4.5,HUMAN_A,,,,,,,pending
+A12,swebench_hard,Opus 4,HUMAN_A,,,,,,,pending
+A13,swebench_hard,Sonnet 4,HUMAN_A,,,,,,,pending
+A14,swebench_hard,Claude 3.7,HUMAN_A,,,,,,,pending
+A15,metr_dedup,Opus 4,HUMAN_A,,,,,,,pending
+A16,metr_dedup,Sonnet 4,HUMAN_A,,,,,,,pending
+A17,metr_dedup,Claude 3.7,HUMAN_A,,,,,,,pending
+A4,bioweapons_knowledge,Opus 4,HUMAN_A,,,,,,,pending
+A4,bioweapons_knowledge,Sonnet 4,HUMAN_A,,,,,,,pending
+A5,bioweapons_knowledge,Claude 3.7,HUMAN_A,,,,,,,pending
+A28,swebench_hard,Opus 4.5,HUMAN_B,,,,,,,pending
+A12,swebench_hard,Opus 4,HUMAN_B,,,,,,,pending
+A13,swebench_hard,Sonnet 4,HUMAN_B,,,,,,,pending
+A14,swebench_hard,Claude 3.7,HUMAN_B,,,,,,,pending
+A15,metr_dedup,Opus 4,HUMAN_B,,,,,,,pending
+A16,metr_dedup,Sonnet 4,HUMAN_B,,,,,,,pending
+A17,metr_dedup,Claude 3.7,HUMAN_B,,,,,,,pending
+A4,bioweapons_knowledge,Opus 4,HUMAN_B,,,,,,,pending
+A4,bioweapons_knowledge,Sonnet 4,HUMAN_B,,,,,,,pending
+A5,bioweapons_knowledge,Claude 3.7,HUMAN_B,,,,,,,pending

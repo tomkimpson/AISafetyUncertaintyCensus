@@ -1,0 +1,11 @@
+record_id,capability,model,reported_score,reconstructed_n,reconstructed_successes,operative_threshold,adjudicator,resolution_notes,status
+A28,swebench_hard,Opus 4.5,,,,,,,pending
+A12,swebench_hard,Opus 4,,,,,,,pending
+A13,swebench_hard,Sonnet 4,,,,,,,pending
+A14,swebench_hard,Claude 3.7,,,,,,,pending
+A15,metr_dedup,Opus 4,,,,,,,pending
+A16,metr_dedup,Sonnet 4,,,,,,,pending
+A17,metr_dedup,Claude 3.7,,,,,,,pending
+A4,bioweapons_knowledge,Opus 4,,,,,,,pending
+A4,bioweapons_knowledge,Sonnet 4,,,,,,,pending
+A5,bioweapons_knowledge,Claude 3.7,,,,,,,pending

@@ -75,8 +75,8 @@ def bootstrap_ci(successes, n, alpha=0.05, n_boot=20000, seed=0):
 def straddles(threshold, ci):
     """True if ``threshold`` lies inside or on the boundary of ``ci``.
 
-    A straddling interval means the eval cannot resolve which side of the
-    threshold the model is on at the chosen confidence level.
+    A straddling pair means that neither directional claim is demonstrated at
+    the chosen one-sided confidence level.
     """
     low, high = ci
     return low <= threshold <= high

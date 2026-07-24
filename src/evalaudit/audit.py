@@ -1,14 +1,15 @@
-"""Single entry point: does this eval resolve its own threshold?
+"""Single entry point: what does an eval demonstrate about its threshold?
 
     from evalaudit import audit
     r = audit(score=0.42, n=100, threshold=0.50)
-    print(r.verdict)          # e.g. "CANNOT RESOLVE"
-    print(r.directional_bounds)  # one-sided 95% lower/upper bounds
+    print(r.decision_class)   # BELOW / ABOVE DEMONSTRATED, or INDETERMINATE
+    print(r.directional_bounds)  # separate one-sided 95% lower/upper bounds
     print(r.prob_above)       # posterior P(capability > threshold)
-    print(r.required_n)       # trials needed to resolve the observed gap
+    print(r.required_n)       # trials needed to distinguish the observed gap
 
 Feed it the numbers a deployment decision rested on; it returns whether those
-numbers can actually place the model on one side of the framework's threshold.
+numbers demonstrate that the model lies below or above the framework's
+threshold, or leave the comparison indeterminate.
 """
 
 from __future__ import annotations
@@ -36,6 +37,9 @@ class AuditResult:
     directional_bounds: tuple
     two_sided_ci: tuple
     ci_method: str
+    demonstrates_below: bool
+    demonstrates_above: bool
+    decision_class: str
     unresolved_directional: bool
     unresolved_two_sided: bool
     # effective sample size after clustering (falls back to n)
@@ -87,7 +91,7 @@ def audit(
     target_power=0.95,
     cluster=None,
 ):
-    """Audit whether an eval result resolves its governance threshold.
+    """Audit what an eval result demonstrates about a governance threshold.
 
     Parameters
     ----------
@@ -98,9 +102,11 @@ def audit(
     successes, score : int or float
         Provide exactly one: raw successes, or the reported accuracy/score.
     alpha : float
-        Significance level for the primary one-sided test. The reported lower
-        and upper bounds each have coverage ``1 - alpha``. A central
-        ``1 - alpha`` interval is also returned as a sensitivity analysis.
+        Significance level for each directional claim. The reported lower and
+        upper bounds each have one-sided coverage ``1 - alpha``. They support
+        two separately controlled claims (above and below); together they are
+        not a simultaneous ``1 - alpha`` classification. A central
+        ``1 - alpha`` interval is returned as a sensitivity analysis.
     direction : {"above", "below"}
         "above": danger means exceeding the threshold (the usual case).
         "below": the threshold is a floor the model must clear.
@@ -140,7 +146,9 @@ def audit(
         successes, n, alpha=alpha, method=ci_method
     )
     two_sided_ci = proportion_ci(successes, n, alpha=alpha, method=ci_method)
-    unresolved_directional = straddles(threshold, directional_bounds)
+    demonstrates_below = directional_bounds[1] < threshold
+    demonstrates_above = directional_bounds[0] > threshold
+    unresolved_directional = not (demonstrates_below or demonstrates_above)
     unresolved_two_sided = straddles(threshold, two_sided_ci)
 
     # Power of the deployment test if the truth equals the observed score.
@@ -154,18 +162,30 @@ def audit(
     p_above = prob_above(threshold, successes, n, prior)
     cred = credible_interval(successes, n, alpha=alpha, prior=prior)
 
-    # Verdict.
-    if unresolved_directional:
-        verdict = "CANNOT RESOLVE"
+    # Three-way result. "Below" and "above" are two separate level-alpha
+    # claims. Calling their union a single 95% classification would be
+    # misleading: the two endpoints equal a central 90% interval at alpha=.05.
+    if demonstrates_below:
+        decision_class = "BELOW DEMONSTRATED"
+    elif demonstrates_above:
+        decision_class = "ABOVE DEMONSTRATED"
+    else:
+        decision_class = "INDETERMINATE"
+
+    verdict = decision_class
+    if decision_class == "INDETERMINATE":
         notes.append(
-            f"the one-sided {int((1-alpha)*100)}% directional bounds "
+            f"the separate one-sided {int((1-alpha)*100)}% directional bounds "
             f"{directional_bounds[0]:.3f}–{directional_bounds[1]:.3f} contain the "
-            f"threshold {threshold:.3f}: the eval does not distinguish safe from "
-            f"dangerous at this confidence."
+            f"threshold {threshold:.3f}: neither a below-threshold nor an "
+            f"above-threshold claim is demonstrated at level alpha={alpha:.2f}."
         )
     else:
-        side = "above" if score > threshold else "below"
-        verdict = f"RESOLVED ({side} threshold)"
+        side = "below" if demonstrates_below else "above"
+        notes.append(
+            f"the {side}-threshold claim is demonstrated by its one-sided "
+            f"{int((1-alpha)*100)}% bound at level alpha={alpha:.2f}."
+        )
     notes.append(
         f"posterior P(capability {'>' if direction=='above' else '<'} threshold) = "
         f"{(p_above if direction=='above' else 1-p_above):.3f}"
@@ -187,6 +207,9 @@ def audit(
         directional_bounds=directional_bounds,
         two_sided_ci=two_sided_ci,
         ci_method=ci_method,
+        demonstrates_below=demonstrates_below,
+        demonstrates_above=demonstrates_above,
+        decision_class=decision_class,
         unresolved_directional=unresolved_directional,
         unresolved_two_sided=unresolved_two_sided,
         effective_n=n_eff,

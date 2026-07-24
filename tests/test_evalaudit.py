@@ -119,7 +119,7 @@ def test_clustered_ci_rejects_neff_below_1():
 
 
 def test_critical_deff_is_one_when_already_straddling():
-    # The CANNOT-RESOLVE fixture: 0.42 on n=100 straddles 0.5 already.
+    # The indeterminate fixture: 0.42 on n=100 straddles 0.5 already.
     assert critical_deff(0.42, 100, 0.5) == 1.0
 
 
@@ -146,7 +146,7 @@ def test_critical_icc_translation():
 
 def test_critical_deff_bioweapons_row():
     # Bioweapons row: 17/33 vs the 27/33 rule-out line. The primary one-sided
-    # bound is resolved below naively; pin its clustering flip point.
+    # upper bound demonstrates below naively; pin its clustering flip point.
     cd = critical_deff(17 / 33, 33, 0.818)
     assert cd is not None and 1.0 < cd <= 33
     assert cd == pytest.approx(7.52, abs=0.05)
@@ -306,21 +306,34 @@ def test_bootstrap_ratio_ci_reproducible_and_brackets_point():
 
 
 # ---------------------------------------------------------------- audit
-def test_audit_cannot_resolve():
+def test_audit_indeterminate():
     r = audit(n=100, threshold=0.5, score=0.42)
     assert r.straddles_threshold is True
-    assert r.verdict == "CANNOT RESOLVE"
+    assert r.verdict == "INDETERMINATE"
+    assert r.decision_class == "INDETERMINATE"
+    assert r.demonstrates_below is False
+    assert r.demonstrates_above is False
     assert r.ci[0] < 0.5 < r.ci[1]
     assert r.required_n is not None and r.required_n > 100
     # posterior probability of being above threshold is far from 0 and 1
     assert 0.02 < r.prob_above < 0.98
 
 
-def test_audit_resolved_when_far_from_threshold():
+def test_audit_demonstrates_below_when_far_from_threshold():
     r = audit(n=1000, threshold=0.5, score=0.20)
     assert r.straddles_threshold is False
-    assert r.verdict.startswith("RESOLVED")
+    assert r.verdict == "BELOW DEMONSTRATED"
+    assert r.demonstrates_below is True
+    assert r.demonstrates_above is False
     assert r.prob_above < 0.001
+
+
+def test_audit_demonstrates_above_when_far_from_threshold():
+    r = audit(n=1000, threshold=0.5, score=0.80)
+    assert r.straddles_threshold is False
+    assert r.verdict == "ABOVE DEMONSTRATED"
+    assert r.demonstrates_below is False
+    assert r.demonstrates_above is True
 
 
 def test_audit_accepts_successes_or_score():

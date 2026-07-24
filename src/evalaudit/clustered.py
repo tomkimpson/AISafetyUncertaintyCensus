@@ -132,8 +132,9 @@ def critical_deff(
     """Smallest design effect at which the CI straddles the threshold.
 
     The CI is recomputed at ``n_eff = n / deff`` with the same point estimate,
-    so this is the clustering severity needed to flip a resolved verdict to
-    "cannot resolve". Returns 1.0 if the naive CI already straddles, and None
+    so this is the clustering severity needed to turn a demonstrated
+    directional claim into indeterminacy. Returns 1.0 if the naive bounds
+    already straddle, and None
     if no deff in ``[1, n]`` flips it (possible only for thresholds at or near
     the [0, 1] boundary, since at ``n_eff = 1`` the interval spans nearly the
     whole unit interval).

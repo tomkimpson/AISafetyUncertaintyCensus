@@ -1,7 +1,7 @@
 PYTHON ?= python
 
 .PHONY: all install test derived figures tables clean \
-        verify verify-sources verify-derived check-numbers checksums
+        verify verify-sources verify-derived verify-human check-numbers checksums
 
 all: derived figures tables
 
@@ -17,6 +17,7 @@ derived:
 	$(PYTHON) scripts/uplift_analysis.py
 	$(PYTHON) scripts/coverage_sim.py
 	$(PYTHON) scripts/run_audit.py
+	$(PYTHON) scripts/summarize_corpus.py
 
 figures: derived
 	$(PYTHON) scripts/make_figure.py
@@ -40,6 +41,11 @@ verify-sources:
 seed-audit:
 	$(PYTHON) scripts/seed_cell_audit.py
 
+# Submission gate: intentionally fails until two independent human coders have
+# completed and reconciled data/verification/human_validation.csv.
+verify-human:
+	$(PYTHON) scripts/check_human_validation.py
+
 # Check committed derived CSVs against recorded SHA-256. Exact match holds on the
 # same platform; floating-point/BLAS differences across platforms can change the
 # simulation columns (coverage_sim.csv) in the last digits — regenerate and diff
@@ -58,4 +64,4 @@ check-numbers:
 clean:
 	rm -f data/derived/*.csv
 	rm -f paper/figures/ci_straddle.* paper/figures/uplift_straddle.*
-	rm -f paper/tables/audit.tex paper/tables/census.tex paper/tables/census_counts.tex paper/tables/census_sensitivity.tex paper/tables/uplift.tex
+	rm -f paper/tables/audit.tex paper/tables/audit_sensitivity.tex paper/tables/census.tex paper/tables/census_counts.tex paper/tables/census_sensitivity.tex paper/tables/reporting_levels.tex paper/tables/uplift.tex

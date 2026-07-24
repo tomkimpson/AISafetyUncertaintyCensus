@@ -1,6 +1,7 @@
 # Reproducibility & verification runbook
 
-This repository has two independent reproducibility claims. Keep them separate:
+This repository has two independent reproducibility claims and one human-validation gate.
+Keep them separate:
 
 1. **The analysis is procedurally reproducible.** Given the census inputs, the statistics,
    figures, and tables regenerate deterministically (fixed seeds, pinned environment).
@@ -33,6 +34,10 @@ uv run make check-numbers  # numbers hand-typed into paper/main.tex still match 
   `audited.csv`): their figures reach the paper as prose, and this guard fails if that prose
   drifts from the data.
 
+The derived stage also writes `corpus_reporting_levels.csv` and
+`source_reporting.csv`. These keep record weighting distinct from source-document weighting;
+neither should be treated as probability-sample inference.
+
 ## 2. Re-verify the structured corpus against primary sources
 
 ### 2a. Source provenance (automated)
@@ -50,7 +55,7 @@ Wayback snapshot. Expect **26/26 resolve**.
 - **HTML sources** return different bytes per fetch (dynamic markup), so they are **not**
   pinned by SHA; cite the **Wayback snapshot** URL from the provenance CSV instead.
 
-### 2b. Claim fidelity and the human sign-off gate
+### 2b. AI-assisted claim fidelity
 
 `data/verification/cell_audit.csv` holds one row per screened record with the claimed
 (threshold, n, score, uncertainty, direction), the cited locator, a `value_status`, and a
@@ -60,10 +65,10 @@ confirming quote. Regenerate the skeleton (preserving recorded confirmations) wi
 python scripts/seed_cell_audit.py
 ```
 
-The cell-audit statuses are an AI-assisted claim-fidelity pass, not human sign-off. The
-canonical analysis input is `data/raw/census_records.csv`, which additionally records
-eligibility, denominator status, and uncertainty class. The original staging explains where
-the most detailed source checks lie:
+The cell-audit statuses are an AI-assisted claim-fidelity pass performed independently of the
+original extraction, not human sign-off. The canonical analysis input is
+`data/raw/census_records.csv`, which additionally records eligibility, denominator status,
+and uncertainty class. The staging explains where the most detailed source checks lie:
 
 - **Tier 0 — central reconstructions.** The ten model-level `evals.csv` rows (nine source
   records because A4 maps to two models) plus the Opus 4 bio-uplift case study.
@@ -71,18 +76,31 @@ the most detailed source checks lie:
 - **Tiers 2–3 — OpenAI / DeepMind / third-party / post-2025 rows.** Cross-checked against
   the cited locator in each source.
 
-**Submission sign-off is complete only when** every eligible record in
-`data/verification/human_signoff.csv` is changed from `pending` to a human disposition and
-has a signer and date. That gate is currently pending. Regenerating the statistical outputs
-does not satisfy it, and the manuscript must not claim completed human verification until
-the author completes the sheet.
+### 2c. Independent human-validation gate
 
-### 2c. Bibliography (automated)
+Read [`HUMAN_VALIDATION_PROTOCOL.md`](HUMAN_VALIDATION_PROTOCOL.md), then have two human
+coders independently complete the census and model-audit templates and adjudicate every
+row. Seed missing blank files without overwriting existing work:
 
-The academic references in `paper/references.bib` are covered by the `check-refs` and
-`check-arxiv-llm-compliance` skills (arXiv/DOI/Semantic Scholar resolution + author/title
-match). As of 2026-07-10 all 48 entries resolve and match; the one defect found (wrong author
-first names in `stelling2025evaluating`) is fixed.
+```bash
+python scripts/seed_human_validation.py
+make verify-human
+```
+
+`make verify-human` is expected to fail while any row is `pending`. It validates allowed
+categories, checks source-confirmation flags and row coverage, and reports raw agreement
+plus Cohen's kappa once complete. Passing this gate does not automatically update the
+canonical CSVs: adjudicated differences must be reviewed, applied, regenerated, and tested.
+
+The external factual-review process is separate and documented in
+[`RIGHT_OF_REPLY.md`](RIGHT_OF_REPLY.md). A non-response is not validation.
+
+### 2d. Bibliography (automated)
+
+Academic references in `paper/references.bib` should be checked by arXiv/DOI resolution and
+author/title matching before submission. The July 2026 revision adds STREAM, NIST AI 800-3,
+Evaluation Cards, California SB-53, and the EU GPAI Code of Practice to make the novelty and
+regulatory context explicit; their canonical identifiers are stored in the bibliography.
 
 ## Coverage gaps (stated, not hidden)
 
